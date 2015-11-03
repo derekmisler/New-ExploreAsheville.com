@@ -1,0 +1,53 @@
+<!--SVMETA
+{
+	"requireBundles" : ["plugins_blog_widget_theme_blog", "plugins_common_custom_layout", "plugins_common_custom_themes"]
+}
+-->
+
+{{~setVar("sanitize", function(input,max,mtxt) { var tempsub = helpers.plugins.stringLib.stripHtml(input);if(tempsub.length>max){return helpers.plugins.stringLib.substringOnWord(tempsub,max)+mtxt; }else{ return tempsub; };})}}
+
+<div class="blogListContainer custom_layout {{:~equal(data.moreUrl, '/stories/')}}blue{{/}}{{!~equal(data.moreUrl, '/stories/')}}red{{/}}">
+	<h2 class="theme-color">{{title}}</h2>
+
+{{#posts}}
+	<article class="blogPost row" data-postid="{{id}}">
+		<div class="small-12 medium-3 columns">
+			<div class="img">
+			{{:image}}
+				<img src="{{image.resource.getThumbnailUrl({ height : 320, width : 320, crop : 'fill', gravity: 'center', quality: 60 })}}"/>
+			{{/image}}								
+			</div>
+		</div>
+		<div class="small-12 medium-9 columns">
+			<div class="content">
+				<h4><a class="theme-color" {{urltracking}} href="{{url}}">{{title}}</a></h4>
+				<ul class="lines">
+					<li>
+						{{#author}}
+							by <a {{urltracking}} class="theme-color" href="{{url}}">{{%name}}</a>
+						{{/author}}
+					</li>										
+				</ul>
+				<p>{{~var.sanitize(data.cleanDescription, 400, '')}}</p>
+				<ul class="links">				
+					<li><a class="theme-color" {{urltracking}} href="{{url}}">Continue Reading &raquo;</a></li>
+				</ul>
+			</div>
+		</div>					
+	</article>
+	<div class="row collapse div">
+		<div class="small-6 columns">
+			<div class="div-part theme-div-left"></div>
+		</div>
+		<div class="small-6 columns">
+			<div class="div-part theme-div-right"></div>
+		</div>
+	</div>
+{{/posts}}
+
+{{:*moreUrl}}
+	<div class="postActions">
+		<a {{urltracking}} href="{{moreUrl}}" class="postLink theme-color">More &raquo;</a>
+	</div>
+{{/moreUrl}}
+</div>
