@@ -201,6 +201,14 @@
 				addButtonTemplate: "<a href='#' data-tb-add class='tripAdd theme-color' data-seo-add-to-trip>Add to Trip Planner</a>",
 				removeButtonTemplate: "<a href='"+ tripbuilder.path +"' data-tb-view class='tripView theme-color'>View Trip</a>"
 			});
+			
+			//Place on Add to Trip Planner button on events
+			$('body').on('click', 'a.tripAdd', function() {
+				setTimeout(function() {
+					versaTagObj.generateRequest('http://www.exploreasheville.com/itineraryholiday');
+				}, 1000);
+			});
+
 		}
 
 		//add tracking

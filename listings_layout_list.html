@@ -1,0 +1,462 @@
+<!--SVMETA
+{
+	"requireBundles" : [
+		"site_select2", 
+		"plugins_listings_shared", 
+		"plugins_common_custom_layout", 
+		"plugins_common_custom_map", 
+		"plugins_common_custom_themes"
+	], "partials" : [
+		{ "plugin" : "common", "name" : "custom_info_window" },
+		{ "plugin" : "listings", "name" : "custom_listing_list_filter" },
+		{ "plugin" : "listings", "name" : "custom_listing_list_item" }
+	]
+}
+-->
+
+<div class="listings blue" id="listings_{{guid}}">
+	<div class="listingFilterContainer"></div>
+	<div class="listingContainer">
+		<div class="loading"><img src="/includes/public/assets/images/ajax-loader-big.gif"/></div>
+	</div>
+
+	<script type="text/template" data-sv-infoWindowTemplate>{{~partial("custom_info_window")}}</script>
+	<script type="text/template" data-sv-filterTemplate>{{~partial("custom_listing_list_filter")}}</script>
+	<script type="text/template" data-sv-listingListItem>{{~partial("custom_listing_list_item")}}</script>
+
+	<script type="text/template" data-sv-itemsTemplate>
+	{{$}}
+		{{#data}}
+		{{>listingListItem}}
+		{{/data}}
+	{{/}}
+	</script>
+
+	<script type="text/template" data-sv-mainTemplate>
+	{{$}}
+		<div class="listingContainer">
+			{{:data}}
+			<div class="custom_layout items-wrapper">
+				{{>items}}				
+			</div>
+			<div class="listingContainerFoot{{:*inRange}} geo-on{{/inRange}} row">
+				<div class="nav-pager text-center">
+					<button class="moreLink theme-small">View More</button>
+				</div>
+			</div>
+			{{/data}}
+			{{!data}}<div class="nodata">No listings available under the current search criteria.</div>{{/data}}
+		</div>
+	{{/}}
+	</script>
+</div>
+<script>
+	require([
+		"jquery", 
+		"plugins_listings/main", 
+		"goatee", 
+		"qs", 
+		"geodist", 
+		"sv_stringLib",
+		"sv_cloudinaryLib",
+		"sv_crmLib",
+		"plugins_common_custom_map", 
+		"plugins_common_custom_seotracker",
+		"plugins_common_custom_socialurls",
+		"plugins_dtn",
+		"sv_crmLib", 
+		"async",		
+		"sv_load!site_tripbuilder",
+		"select2",
+		"domReady!"
+	], function($, Listings, gt, qs, geodist, stringLib, cloudinary, crmLib, 
+			mapObj, seotracker, social, dtn, sv_crmLib, async, tripbuilder) {
+		var root = $("#listings_{{guid}}");
+		var listingContainerClass = "listingContainer";
+		var listingFilterContainerClass = "listingFilterContainer";
+		var infoWindowTmpl = root.find("[data-sv-infoWindowTemplate]").html();
+		var mainTemplate = root.find("[data-sv-mainTemplate]").html();
+		var filterTemplate = root.find("[data-sv-filterTemplate]").html();
+		var listingListItem = root.find("[data-sv-listingListItem]").html();
+		var itemsTmpl = root.find("[data-sv-itemsTemplate]").html();
+		var widget = {{widget}};
+		var dtnargs = {{dtn}};
+		var activeSubCats = {{subcats}};
+		var activeRegions = {{regions}};
+		var activeAmenities = {{amenities}};
+		var limit = 10;
+		var coords = {};
+		var token = "{{token}}";
+		var urlQs;
+		var listings;
+		var maxRangeMiles = {{maxRangeMiles}};
+		var clientLat = {{clientLat}};
+		var clientLon = {{clientLon}};
+		var distanceUnit = "miles"  /* miles or mi, yards, feet, kilometers or km, meters */;
+		var distanceFromClient;
+		var inRange;
+		var page = 1;
+		dtnargs.limit = widget.dtnlimit;
+		
+		// add goatee plugins
+		var goatee = new gt.Goatee();
+		goatee.addPlugin("stringLib", stringLib);
+		goatee.addPlugin("crmLib", crmLib);
+		goatee.addPlugin("cloudinary", cloudinary.default);
+		goatee.addPlugin("seo", seotracker);
+
+		if (widget.listingsubcats !== undefined && widget.listingsubcats["]"] !== undefined) {
+			widget.listingsubcats = widget.listingsubcats["]"];
+		}
+		if (widget.listingsubcats === undefined && widget["listingsubcats[]"] !== undefined) {
+			widget.listingsubcats = widget["listingsubcats[]"];
+		}
+
+		if (widget.showSearchBox !== undefined)
+			widget.showSearchBox = widget.showSearchBox;
+		else
+			widget.showSearchBox = true;
+
+		var filter = {
+			"categories.catid" : widget.listingcats,
+			"categories.subcatid" : { "$in" : widget.listingsubcats },
+			"regionid" : widget.region
+		};
+		var urlsortby = false;
+
+		if (widget.listingsubcats instanceof Array) {
+			filter["categories.subcatid"]["$in"] = widget.listingsubcats;
+		} else {
+			filter["categories.subcatid"]["$in"] = [widget.listingsubcats];
+		}		
+
+		var globalOptions = { 
+			"limit" : limit,
+			"skip" : 0,
+			"loadMore": false
+		};
+		var globalFilter = {
+			filter : filter
+		};
+
+		var renderFilter = function() {
+			if (globalFilter.filter["$text"] !== undefined && globalFilter.filter["$text"]["$search"] !== undefined) {
+				globalFilter.filter.keyword = globalFilter.filter["$text"]["$search"];
+			}
+			var filterHTML = goatee.fill(filterTemplate, { widget : widget, subcats : activeSubCats, regions : activeRegions, amenities : activeAmenities, inRange: inRange }, {}, globalFilter);
+			root.find("." + listingFilterContainerClass).replaceWith(filterHTML);
+
+			root.find("." + listingFilterContainerClass + " #listingsubcats").select2({
+				minimumResultsForSearch: Infinity,
+				containerCssClass: "themed",
+				dropdownCssClass: "blue",
+				dropdownAutoWidth: true,
+				width: "resolve"
+			});
+
+			root.find("." + listingFilterContainerClass + " #regions").select2({
+				minimumResultsForSearch: Infinity,
+				containerCssClass: "themed",
+				dropdownCssClass: "blue",
+				dropdownAutoWidth: true,
+				width: "resolve"
+			});
+		}
+
+		var cloneOptions = function(obj) {
+			for (var key in globalOptions) {
+				obj[key] = globalOptions[key];
+			}
+			return obj;
+		}
+
+		var renderTemplate = function(filter, options, cb) {
+			var data, pager;
+			options.skip = parseInt(options.skip);
+			options.limit = parseInt(options.limit);			
+
+			listings.getData({ filter : filter, options : options, dtnargs : dtnargs }, function(err, args) {
+				//fill templates with data
+				data = args.data;
+				pager = args.pager;
+
+				$.each(data, function(i, val) {
+					//validate social links					
+					if (val.social !== undefined && val.social !== null) {
+						$.each(val.social, function(key, obj) {
+							if (this.smserviceid == 1) {
+								obj.value = sv_crmLib.getTrackUrl(val.crmtracking.core_twitter_click, social.getValidSocialUrl({ url : obj.value , urlType : "twitter" }));
+							} else if (this.smserviceid == 2) {
+								obj.value = social.getValidSocialUrl({ url : obj.value , urlType : "youtube" });
+							} else if (this.smserviceid == 3) {
+								obj.value = social.getValidSocialUrl({ url : obj.value , urlType : "flickr" });
+							} else if (this.smserviceid == 4) {
+								obj.value = sv_crmLib.getTrackUrl(val.crmtracking.core_facebook_click, social.getValidSocialUrl({ url : obj.value , urlType : "facebook" }));
+							} else if (this.smserviceid == 12) {
+								obj.value = social.getValidSocialUrl({ url : obj.value , urlType : "pinterest" });
+							}
+						});
+					}					
+				});
+
+				// tracking call must happen before the before goatee.fill
+				// we are using the plugin since we can use this partial events
+				// the partial must have everything available when it is called from other modules.
+				addSEMTracking(data);
+				$.each(data, function(i) {
+					data[i]["seoCat"] = "Listings";
+					data[i]["detailAction"] = "Link to Detail";
+					data[i]["seoTitle"] = data[i].title;
+					data[i]["seoVars"] = { vt:'Results', ua:'Click', et:data[i]["seoTitle"] };
+					data[i]["seoDtn"] = data[i].isDTN ? 'DTN' : '';
+				});
+				//end tracking
+
+				if (options.loadMore === true) {
+					var placemarks = mapObj.placemarks;
+					var html = goatee.fill(itemsTmpl, { data : data }, { listingListItem : listingListItem }, { inRange : inRange });
+					root.find(".items-wrapper .loading").remove();
+					root.find(".items-wrapper").append(html);
+				} else {
+					var placemarks = [];
+					var html = goatee.fill(mainTemplate, { skip : options.skip, data : data }, { listingListItem : listingListItem, items : itemsTmpl }, { inRange : inRange });
+					root.find("." + listingContainerClass).replaceWith(html);
+				}
+
+				if (tripbuilder !== undefined) {
+					var seoCat = "Listings",
+						seoJsLabel = 'sem.getSeoTitle(this)',
+						seoVars = {vt:'Results',ua:'Click',ot:'Trip'},
+						seoJsVars = {et:seoJsLabel};
+					tripbuilder.initButtons({ 
+						root : root,
+						addButtonTemplate: "<a " +
+							seotracker.addEvent({ wrap: true, category: seoCat, action: "Trip Builder - Add", jslabel: seoJsLabel, vars:[seoVars,{ui:'Conversion',ot:'Trip'}], jsvars:[seoJsVars] }) +
+							" href='#' data-tb-add class='tripAdd theme-color' data-seo-add-to-trip>Add to Trip Planner</a>",
+						removeButtonTemplate: "<a " +
+							seotracker.addEvent({ wrap: true, category: seoCat, action: "Trip Builder - View", jslabel: seoJsLabel, vars:[seoVars,{ui:'Conversion',ot:'Trip'}], jsvars:[seoJsVars] }) +
+							" href='"+ tripbuilder.path +"' data-tb-view class='tripView theme-color'>View Trip</a>"
+					});
+				}
+
+				// begin: Google Maps logic
+				// begin: Google Maps logic
+				$.each(data, function(i,v){
+					if (v.latitude && v.longitude) {
+						placemarks.push({
+							id : "listing_" + v.recid,
+							marker : {
+								position : [v.latitude, v.longitude]
+							},
+							infoWindow : {
+								content : goatee.fill(infoWindowTmpl, v),
+								maxWidth : 640
+							}
+						});
+					}
+				});
+				
+				mapObj.setState({
+					placemarksAdded : false,
+					placemarks : placemarks
+				});
+				// end: Google Maps logic				
+
+				if (dtnargs.auid !== undefined) {
+					dtn.listingTracking(dtnargs.auid, root);
+				}
+				
+				if(!pager.hasNextPage) {
+					root.find('.listingContainerFoot .moreLink').hide();
+				}
+
+				cb(null);
+			});
+		}
+
+		if (window.location.search.length && window.location.search.match(/\?filter/)) {
+			urlQs = qs.parse(window.location.search.replace(/\?/, ""));
+			filter = urlQs.filter;
+			if (urlQs.options !== undefined) globalOptions = urlQs.options;
+		} 
+
+		if (history.replaceState !== undefined) {
+			history.replaceState({ filter : filter, options : globalOptions }, "", window.location.search);
+		}
+		
+		if (urlQs !== undefined) {
+			globalFilter = urlQs;
+		}
+
+		if (filter.sortby !== undefined) {
+			urlsortby = true;
+		}
+
+		/*** DTN says to disbale geo entirely (ticket #214986) ***/
+
+		/*
+		if (filter.sortby === "distance" && globalOptions.custom !== undefined 
+				&& globalOptions.custom.distance !== undefined && globalOptions.custom.distance.length === 2) {
+			coords.latitude = globalOptions.custom.distance[1];
+			coords.longitude = globalOptions.custom.distance[0];
+			inRange = new geodist({ start : { lat : coords.latitude, lon : coords.longitude }, end : { lat : clientLat, lon : clientLon } }).inRange({ limit : maxRangeMiles, unit : distanceUnit });
+
+			if (inRange) {
+				filter.sortby = "distance";
+			} else {
+				filter.sortby = "rankorder=1&sortcompany=1";				
+			}
+		} else {
+			filter.sortby = "rankorder=1&sortcompany=1";
+		}
+		*/
+		filter.sortby = "rankorder=1&sortcompany=1";
+
+		listings = new Listings({ 
+			coords : coords, 
+			token : token,
+			clientLat : clientLat,
+			clientLon : clientLon
+		});
+
+		renderFilter();
+		renderTemplate(filter, globalOptions, function() {});
+		/*
+		renderTemplate(filter, globalOptions, function() {
+			if (filter.sortby !== "distance" && "geolocation" in navigator) {
+				navigator.geolocation.getCurrentPosition(function(position) {
+					coords.latitude = position.coords.latitude;
+					coords.longitude = position.coords.longitude;
+					inRange = new geodist({ start : { lat : coords.latitude, lon : coords.longitude }, end : { lat : clientLat, 
+						lon : clientLon } }).inRange({ limit : maxRangeMiles, unit : distanceUnit });
+
+					if (inRange) {
+						// sort was not declared in URL - default to distance if in range
+						if (!urlsortby) {
+							filter.sortby = "distance";
+							listings = new Listings({ 
+								coords : coords, 
+								token : token, 
+								clientLat : clientLat,
+								clientLon : clientLon
+							});
+						}
+						renderFilter();
+						renderTemplate(filter, globalOptions, function() {});
+					}
+				});
+			}
+		});
+		*/
+
+		root.on("click", ".listingContainerFoot .moreLink", function() {
+			var options = globalOptions;
+			options.limit = limit;
+			options.skip = options.skip+limit;
+			options.loadMore = true;
+			root.find(".items-wrapper").append('<div class="loading"><img src="/includes/public/assets/images/ajax-loader-big.gif"/></div>');
+			renderTemplate(filter, options, function() {
+				delete options.loadMore;
+				/*if (history.pushState !== undefined) {
+					history.pushState({ filter : filter, options : options }, "", "?" + qs.stringify({ filter : filter}) + "&" + qs.stringify({ options : options }));
+				}*/
+			});
+			page += 1;
+		});		
+		
+		root.on("submit", "." + listingFilterContainerClass + " form", function() {
+			page = 1;
+			var options = globalOptions;
+			filter = qs.parse($(this).serialize());
+			options.limit = limit;
+			options.loadMore = false;
+			options.skip = 0;
+			renderTemplate(filter, options, function() {
+				if (history.pushState !== undefined) {
+					history.pushState({ filter : filter, options : options }, "", "?" + qs.stringify({ filter : filter}) + "&" + qs.stringify({ options : options }));
+				}
+			});
+			return false;
+		});
+		
+		
+		root.on("click", "a[data-sv-sortByLink]", function(e) {
+			e.preventDefault();
+			root.find('a[data-sv-sortByLink]').removeClass('selected');
+			root.find('input[name=sortby]').val($(this).data('sortType'))
+			root.find("." + listingFilterContainerClass + " form").trigger("submit");
+			$(this).addClass('selected');
+		});
+		
+		root.on("click", "#label_amenities", function() {
+			$(this).toggleClass("close");
+			root.find(".amenityContainer").toggle();
+		});
+
+		mapObj.init({
+			options : { node: root }
+		});
+		mapObj.initListInterface();
+		mapObj.renderMap();
+
+
+		// begin seo tracking
+		var addSEMTracking = function(data) {
+			// we are currently calling renderTemplate twice for geo with the potential
+			// that the listings could change based on the setting--so we
+			// are going to destroy semData and rebuild with each render.
+			window.sem = window.sem || {};
+			window.sem.semData = [];
+			window.sem.getListingData = function(id) {
+				return $.grep(sem.semData, function(e){ return e.listingId === id; });
+			};
+			window.sem.setListingData = function(id) {
+				results = $.grep(sem.semData, function(e){ return e.listingId === id; });
+				window.gtmDataLayer.push(results[0]);
+				window.sem.setListingCategoryData(id);
+				return id;
+			};
+			window.sem.setListingCategoryData = function(id) {
+				results = $.grep(window.sem.getListingData(id)[0].categories, function(e){ return e.primary === true; });
+				if (results.length > 0) {
+					window.gtmDataLayer.push(results[0]);
+					return true;
+				} else {
+					return false;
+				}
+					
+			};
+			window.sem.getSeoTitle = function(o) {
+				return  $(o).closest("[data-seo-title]").attr("data-seo-title");
+			};
+			window.sem.getSeoDtn = function(o) {
+				return  $(o).closest("[data-seo-title]").attr("data-seo-dtn");
+			};
+
+			for (var i = 0; i < data.length; i++) {
+				var obj = {
+					'listingId':data[i].recid
+					,'recId':data[i].recid
+					,'acctId':data[i].acctid
+					,'categories':data[i].categories
+					,'title':data[i].title
+					,'region':data[i].region
+					,'parentId':data[i].parentid
+				};
+				window.sem.semData.push(obj);
+			};
+		};
+		// end seo tracking
+
+		if (window.onpopstate !== undefined) {
+			window.onpopstate = function(event) {
+				if (event.state !== null && event.state.filter !== undefined && event.state.options !== undefined) {
+					filter = event.state.filter;
+					options = event.state.options;
+					renderTemplate(filter, options, function() {});
+					renderFilter();
+				}
+			}
+		}
+	});
+</script>

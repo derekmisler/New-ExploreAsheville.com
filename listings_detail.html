@@ -1,0 +1,548 @@
+<!--SVMETA
+{
+	"requireBundles" : [
+		"plugins_listings_shared", 
+		"plugins_common_custom_layout", 		
+		"plugins_common_custom_detail", 
+		"plugins_common_custom_map", 
+		"plugins_common_custom_themes", 
+		"plugins_common_custom_shadowbox",
+		"site_slick"
+	], "partials" : [
+		{ "plugin" : "common", "name" : "custom_info_window" },
+		{ "plugin" : "listings", "name" : "custom_detail_gallery" },
+		{ "plugin" : "listings", "name" : "custom_detail_amenities" },
+		{ "plugin" : "listings", "name" : "custom_detail_meeting_facilities" },
+		{ "plugin" : "listings", "name" : "custom_detail_twitter" },
+		{ "plugin" : "listings", "name" : "reviews_tripadvisor" },
+		{ "plugin" : "listings", "name" : "reviews_yelp" },
+		{ "plugin" : "events", "name" : "custom_event_list_item" },
+		{ "plugin" : "offers", "name" : "custom_offer_list_item" }
+	]
+}
+-->
+
+<!--////////////////  data fixes   ///////////////-->
+{{~exec(function() { 
+	helpers.var.bookurl = "";
+	if (data.data.accountudfs !== undefined) {
+		data.data.accountudfs.forEach(function(obj) {
+			if (obj.fieldid == 12 && obj.value.length > 0) {
+				helpers.var.bookurl = obj.value;
+			}
+		});
+	}
+
+	// social
+	helpers.var.hasSocial = false;
+	if (data.data.social !== undefined) {		
+		data.data.social.forEach(function(obj) {
+			switch (obj.smserviceid) {
+				case 1: helpers.var.twitter = obj.value; helpers.var.hasSocial = true; break;
+				case 2: helpers.var.youtube = obj.value; helpers.var.hasSocial = true; break;
+				case 3: helpers.var.flickr = obj.value; helpers.var.hasSocial = true; break;
+				case 4: helpers.var.facebook = obj.value; helpers.var.hasSocial = true; break;				
+				case 12: helpers.var.pinterest = obj.value; helpers.var.hasSocial = true; break;
+				default: break;
+			};
+		});
+		if(helpers.var.twitterUrl || helpers.var.facebookUrl) {
+			helpers.var.hassocial = true;
+		}
+	}
+})}}
+
+<div class="listings" id="listingDetail_{{guid}}">
+	<script type="text/template" data-sv-infoWindowTemplate>{{~partial("custom_info_window")}}</script>
+	<script type="text/template" data-sv-galleryTemplate>
+		{{~partial("custom_detail_gallery")}}
+	</script>
+	
+	{{:~var.twitter}}
+	<script type="text/template" data-sv-twitterTemplate>
+		{{~partial("custom_detail_twitter")}}
+	</script>
+	{{/~var.twitter}}
+
+	{{:data.hasTripAdvisor}}
+	<script type="text/template" data-sv-tripadvisorTemplate>
+		{{~partial("reviews_tripadvisor")}}
+	</script>
+	{{/data.hasTripAdvisor}}
+	
+	{{:data.hasYelp}}
+	<script type="text/template" data-sv-yelpTemplate>
+		{{~partial("reviews_yelp")}}
+	</script>
+	{{/data.hasYelp}}
+
+	<div class="listingDetailContainer custom_detail blue" id="listingDetailConatainer_{{guid}}">
+		<a class="listingLayout" href="javascript:history.go(-1);">&laquo; Back</a>
+		{{#data}}
+		<div class="item item_{{@row}} row" data-recid="{{recid}}" data-type="listing">
+			<div class="columns small 12"><h4>{{title}}</h4></div>
+			<div class="columns small-12 medium-6">
+				<div class="detailcontent{{:~var.hassocial}} social-right{{/~var.hassocial}}">		
+					<ul class="lines">
+						<li>{{address1}}</li>
+						{{:address2}}<li>{{address2}}</li>{{/address2}}
+						<li>{{~plugins.stringLib.formatCityStateZip({city: data.city, state: data.state, zip: data.zip})}}</li>
+						{{:phone}}<li>Phone: {{phone}}</li>{{/phone}}
+						{{:region}}<li>Region: {{region}}</li>{{/region}}
+					</ul>
+					<ul class="links">
+						{{:weburl}}
+						<li><a target="_blank" class="theme-color" href="{{~plugins.crmLib.getTrackUrl(data.crmtracking.core_listing_click, data.weburl)}}" data-seo-website>Visit Website</a></li>
+						<li class="sep">|</li>
+						{{/weburl}}
+						<li class="tripButtonContainer" data-tb-button data-tb-recid="{{recid}}" data-tb-type="listing" data-tb-crm-track="{{crmtracking.core_itinerary}}"></li>					
+					</ul>
+					{{:~var.bookurl}}
+					<div class="buttons">
+						<a class="theme-small" href="{{~var.bookurl}}" target="_blank" data-seo-booking>Book Now</a>
+					</div>
+					{{/~var.bookurl}}
+					{{:~var.hassocial}}
+					<div class="socialbar">
+						<ul class="social">
+						{{:~var.facebook}}
+							<li><a data-sv-social data-sv-service="facebook" href="{{~var.facebook}}" target="_blank" data-seo-social-facebook><span class="fa-stack facebook"><i class="fa fa-circle fa-stack-2x"></i><i class="fa fa-facebook fa-stack-1x fa-inverse"></i></span></a></li>
+						{{/~var.facebook}}
+						{{:~var.twitter}}
+							<li><a data-sv-social data-sv-service="twitter" href="{{~var.twitter}}" target="_blank" data-seo-social-twitter><span class="fa-stack twitter"><i class="fa fa-circle fa-stack-2x"></i><i class="fa fa-twitter fa-stack-1x fa-inverse"></i></span></a></li>
+						{{/~var.twitter}}
+						{{:~var.youtube}}
+							<li><a data-sv-social data-sv-service="youtube" href="{{~var.youtube}}" target="_blank" data-seo-social-youtube><span class="fa-stack"><i class="fa fa-youtube-square"></i></span></a></li>
+						{{/~var.youtube}}
+						{{:~var.flickr}}
+							<li><a data-sv-social data-sv-service="flickr" href="{{~var.flickr}}" target="_blank" data-seo-social-flickr><span class="fa-stack"><i class="fa fa-flickr"></i></span></a></li>
+						{{/~var.flickr}}
+						{{:~var.pinterest}}
+							<li><a data-sv-social data-sv-service="pinterest" href="{{~var.pinterest}}" target="_blank" data-seo-social-pinterest><span class="fa-stack"><i class="fa fa-pinterest"></i></span></a></li>
+						{{/~var.pinterest}}
+						</ul>
+					</div>
+					{{/~var.hassocial}}	
+					{{:description}}
+					<p>{{description}}</p>
+					{{/description}}
+				</div>				
+				<dl class="accordion" data-accordion>
+					<dd class="accordion-navigation">
+						<a class="theme-border-color theme-color" href="#panel_amenities" data-seo-tab-amenities>
+							Amenities
+							<i class="fa arrow"></i>
+						</a>
+						<div class="amenityTabs content" id="panel_amenities">
+							{{>custom_detail_amenities}}
+						</div>
+					</dd>							
+				</dl>
+				{{:meetingfacility}}
+				<dl class="accordion" data-accordion>
+					<dd class="accordion-navigation">
+						<a class="theme-border-color theme-color" href="#panel_meetingFacilities" data-seo-tab-meeting>
+							Meeting Facilities
+							<i class="fa arrow"></i>
+						</a>
+						<div class="meetingFacility content" id="panel_meetingFacilities">
+							{{>custom_detail_meeting_facilities}}
+						</div>
+					</dd>
+				</dl>
+				{{/meetingfacility}}
+				{{:events}}
+				<dl class="accordion" data-accordion>
+					<dd class="accordion-navigation">
+						<a class="theme-border-color theme-color" href="#panel_events" data-seo-tab-events>
+							Events
+							<i class="fa arrow"></i>
+						</a>
+						<div class="eventsContainer custom_layout force-mobile content" id="panel_events">
+							{{~setVar("hidemap", true)}}
+							{{#events}}
+								{{~exec(function() { 
+									data.startDate = helpers.plugins.clientMoment(data.startDate);
+									if (data.endDate) data.endDate = helpers.plugins.clientMoment(data.endDate);
+								})}}
+								{{>custom_event_list_item}}
+							{{/events}}
+						</div>
+					</dd>
+				</dl>
+				{{/events}}
+				{{:offers}}
+				<dl class="accordion" data-accordion>
+					<dd class="accordion-navigation">
+						<a class="theme-border-color theme-color" href="#panel_offers" data-seo-tab-offers>
+							Packages
+							<i class="fa arrow"></i>
+						</a>
+						<div class="coupons couponContainer custom_layout force-mobile content" id="panel_offers">
+							{{~setVar("hidemap", true)}}
+							{{#offers}}
+								{{~exec(function() { 
+									if (data.redeemstart) data.redeemstart = helpers.plugins.clientMoment(data.redeemstart);
+									if (data.redeemend) data.redeemend = helpers.plugins.clientMoment(data.redeemend);
+								})}}	
+								{{>custom_offer_list_item}}
+							{{/offers}}
+						</div>
+					</dd>
+				</dl>
+				{{/offers}}
+
+
+				<div class="gMapDetail" id="detailmap">
+					<ul class="detailmap mapTabs">
+						<li>Map View</li>
+						<li class="sep">|</li>
+						<li><a data-street-view-link href="javascript:void(0);" data-seo-streetview>Street View</a></li>				
+						<li class="sep">|</li>
+						<li><a href="/mapexplorer/?action=nearby&recid={{recid}}" target="_blank" data-seo-nearby>What's Nearby</a></li>
+					</ul>	
+					<div class="gMapContainer" data-gMapContainer>
+						<div class="gMapHolder" data-mapHolder></div>
+					</div>
+				</div>
+			</div>
+			<div class="columns small-12 medium-6">
+				<div class="mediaGallery"></div>
+
+				<div id="mobilemap"></div>
+
+				<div class="detailtabs">
+					<dl class="tabs" data-tab>
+					{{~setVar("tabfirst", true)}}
+					{{:hasTripAdvisor}}
+						<dd class="{{:~var.tabfirst}}active{{/}}">
+							<a href="#tab_tripadvisor" data-seo-tab-tripadvisor>TripAdvisor</a>
+							<div class="arrow"><img src="/includes/public/assets/images/arrows/arrow_full_sm_blue.png" /></div>
+						</dd>
+						{{~setVar("tabfirst", false)}}
+					{{/}}
+					{{:hasYelp}}
+						{{!data.hasTripAdvisor}}
+						<dd class="{{:~var.tabfirst}}active{{/}}">
+							<a href="#tab_yelp" data-seo-tab-yelp>Yelp</a>
+							<div class="arrow"><img src="/includes/public/assets/images/arrows/arrow_full_sm_blue.png" /></div>
+						</dd>
+						{{~setVar("tabfirst", false)}}
+						{{/}}
+					{{/}}
+					{{:~var.facebook}}
+						<dd class="{{:~var.tabfirst}}active{{/}}">
+							<a href="#tab_facebook" data-seo-tab-facebook>Facebook</a>
+							<div class="arrow"><img src="/includes/public/assets/images/arrows/arrow_full_sm_blue.png" /></div>
+						</dd>
+						{{~setVar("tabfirst", false)}}
+					{{/}}
+					{{:~var.twitter}}
+						<dd class="{{:~var.tabfirst}}active{{/}}">
+							<a href="#tab_twitter" data-seo-tab-twitter>Twitter</a>
+							<div class="arrow"><img src="/includes/public/assets/images/arrows/arrow_full_sm_blue.png" /></div>
+						</dd>
+						{{~setVar("tabfirst", false)}}
+					{{/}}
+					</dl>
+					{{~setVar("tabfirst", true)}}
+					<div class="tabs-content">
+					{{:hasTripAdvisor}}
+						<div class="content{{:~var.tabfirst}} active{{/}}" id="tab_tripadvisor"></div>
+						{{~setVar("tabfirst", false)}}
+					{{/}}
+					{{:hasYelp}}
+						{{!data.hasTripAdvisor}}
+						<div class="content{{:~var.tabfirst}} active{{/}}" id="tab_yelp"></div>
+						{{~setVar("tabfirst", false)}}
+						{{/}}
+					{{/}}
+					{{:~var.facebook}}
+						<div class="content{{:~var.tabfirst}} active{{/}}" id="tab_facebook">
+							<div class="fbembed">
+								<div class="content" data-content data-fburl="{{~var.facebook}}">
+									<div class="fa fa-spinner fa-spin" data-loader></div>
+								</div>
+								<script type="text/template" data-template>
+									<div class="fb-page" 
+										data-href="[[fburl]]" 
+										data-adapt-container-width="true"
+										data-height="800" 
+										data-hide-cover="false" 
+										data-show-facepile="true" 
+										data-show-posts="true"
+										data-small-header="true"></div>
+								</script>
+								<div class="clear"></div>
+							</div>
+						</div>
+						{{~setVar("tabfirst", false)}}
+					{{/}}
+					{{:~var.twitter}}
+						<div class="content{{:~var.tabfirst}} active{{/}}" id="tab_twitter"></div>
+						{{~setVar("tabfirst", false)}}
+					{{/}}
+					</div>
+				</div>
+			</div>
+		</div>		
+		{{/data}}
+		{{!data}}This listing does not exist!{{/data}}
+	</div>
+</div>
+
+<script>
+	require([
+		"jquery", 
+		"sv_goatee!plugins=crmLib,moment,stringLib,clientMoment", 
+		"sv_cloudinaryLib", 
+		"slick", 
+		"plugins_common_custom_map", 
+		"plugins_common_custom_seotracker", 
+		"plugins_common_custom_socialurls",
+		"async", 
+		"sv_crmLib",
+		"plugins_common_custom_shadowbox",
+		"sv_load!site_tripbuilder",
+		"sv_facebookLib",
+		"domReady!"
+	], function($, goatee, sv_cloudinaryLib, slick, 
+			mapObj, seotracker, social, async, sv_crmLib, sb, tripbuilder, facebookLib) {
+		var root = $("#listingDetail_{{guid}}");
+		var data = {{dataJSON}};
+		var galleryTemplate = root.find("[data-sv-galleryTemplate]").html();
+		var infoWindowTmpl = root.find("[data-sv-infoWindowTemplate]").html();
+
+		/**** CRM tracking - DO NOT REMOVE!!!! ****/
+		if (data.crmtracking && data.crmtracking.core_listing_view) {
+			sv_crmLib.trackAjax(data.crmtracking.core_listing_view);
+		}		
+
+		//hack to move map on mobile - don't like it, but they HAD to have it this way...
+		if ($(window).width() < 641) {
+			root.find("#detailmap").appendTo("#mobilemap");
+		}
+
+		// validate and track social urls
+		root.find("[data-sv-social]").each(function() {
+			var validServices =['facebook', 'twitter', 'flickr', 'youtube', 'pinterest'];
+			var service = $(this).data('svService').toLowerCase();
+			var href = $(this).attr('href');
+
+			if (validServices.indexOf(service) > -1) {
+				href = social.getValidSocialUrl({	url : href, urlType : service });
+				switch (service) {
+				case "twitter":
+					$(this).attr("href", sv_crmLib.getTrackUrl(data.crmtracking.core_twitter_click, href));
+					break;
+				case "facebook":
+					$(this).attr("href", sv_crmLib.getTrackUrl(data.crmtracking.core_facebook_click, href));
+					break;
+				default:
+					$(this).attr("href", href);
+				}
+			}
+		});
+
+		/*** Media Gallery ***/
+		var getVideoID = function(url) {
+			if (url.match(/https?:\/\/www\.youtube\.com\/watch\?v=.*/) !== null) {
+				return url.replace(/.*\?v=/, "");
+			} else if (url.match(/https?:\/\/youtu\.be\/.*/) !== null) {
+				return url.replace(/.*\//, "");
+			}
+		}
+
+		if (data.media !== undefined) {
+			data.media.forEach(function(val, i) {
+				if (val.mediatype === "Image" || val.mediatype === "Logo") {
+					val.image = sv_cloudinaryLib.default.createResource({ imageUrl : val.mediaurl });
+					val.isVideo = false;
+				} else if (val.mediatype === "YouTube") {
+					val.isVideo = true;
+					val.videoID = getVideoID(val.mediafile);
+					//you may use default, 0, 1, 2 or 3 for the youtube file name
+					//val.image = sv_cloudinaryLib.default.createResource({ imageUrl : "http://img.youtube.com/vi/" + val.videoID + "/0.jpg" });
+				}
+			});
+		}
+		
+		var galleryHTML = goatee.fill(galleryTemplate, { media : data.media });
+		root.find(".mediaGallery").html(galleryHTML);
+
+		root.find(".mediaGallery .slider").slick({
+			dots : true,
+			fade : true,
+			arrows : false,
+			infinite : false,
+			appendDots : root.find(".gallery-dots")
+		});
+
+		{{:data.hasTripAdvisor}}
+			/*** TripAdvisor ***/		
+			var fetchTA = function() {
+				var args = {service: "tripadvisor", recid: data.recid};
+				$.get("/includes/plugins/listings/getreviews/", args, function(res) {
+					if (res.success) {
+						root.find("#tab_tripadvisor").html(goatee.fill(root.find("[data-sv-tripadvisorTemplate]").html(), res.data));
+						return true;
+					} else {
+						return false;
+					}
+				}).fail(function() { return false; } );
+			}
+			
+			fetchTA();
+		{{/data.hasTripAdvisor}}
+
+
+		{{:data.hasYelp}}
+		{{!data.hasTripAdvisor}}
+			/*** Yelp ***/
+			var fetchYelp = function() {
+				var args = {service: "yelp", recid: data.recid};
+				$.get("/includes/plugins/listings/getreviews/", args, function(res) {
+					if (res.success) {
+						root.find("#tab_yelp").html(goatee.fill(root.find("[data-sv-yelpTemplate]").html(), res.data));
+						return true;
+					} else {
+						return false;
+					}
+				}).fail(function() { return false; } );
+			}
+			
+			fetchYelp();
+		{{/data.hasTripAdvisor}}
+		{{/data.hasYelp}}
+
+		// FaceBook embed init
+		{{:~var.facebook}}
+		var fbRoot = root.find('#tab_facebook');
+		var fbContent = fbRoot.find('[data-content]');
+		var fbembed = social.getValidSocialUrl({url: fbContent.data("fburl"), urlType: "facebook" });
+		var fbTemplate = fbRoot.find('[data-template]').html().replace("[[fburl]]", fbembed);
+		fbContent.html(fbTemplate);
+		facebookLib.init();
+		{{/~var.facebook}}
+
+		// twitter
+		{{:~var.twitter}}
+			var fetchTweets = function() {
+				var getUsername = function() {
+					if (data.social) {
+						var arr = data.social.filter(function(x) { return x.smserviceid === 1; });
+						return arr.length > 0 ? arr[0].value : false;
+					}
+					return false;
+				};
+				var username = getUsername();
+
+				if (username) {
+					var twitterUrl = '/plugins/core/svapi/?service=twitter&endpoint=usertweets&serviceArgs[screen_name]='+username;
+					$.get(twitterUrl, function(res) {
+						if(res.success && res.data.length > 0) {
+							var twitterhtml = goatee.fill(root.find('[data-sv-twitterTemplate]').html(), {'user': res.data[0].user, 'tweets': res.data});
+							root.find('#tab_twitter').html(twitterhtml);
+						}
+					});
+				}
+			};
+			fetchTweets();
+		{{/~var.twitter}}
+		
+		/*** map ***/
+		if (data.loc !== undefined) {
+			var gMapContainer = root.find("[data-gMapContainer]");
+			var mapHolder = gMapContainer.find("[data-mapHolder]");
+
+			var placemarks = [{
+				id : "listing_" + data.recid,
+				marker : {
+					position : [data.latitude, data.longitude]
+				},
+				infoWindow : {
+					content : goatee.fill(infoWindowTmpl, data),
+					maxWidth : 640
+				}
+			}];
+
+			Shadowbox.init();
+			mapObj.init({
+				open : true,
+				placemarks : placemarks,
+				options : { node: root }
+			});
+			mapObj.initDetailInterface();
+			mapObj.renderMap();
+		}
+
+		var seoCat = "Listings";
+		var seoVars = {vt:'Detail',cat:'Listings',ua:'Click'};
+
+		if (tripbuilder !== undefined) {
+			tripbuilder.initButtons({ 
+				root : root,
+				addButtonTemplate: "<a " + seotracker.addEvent({ wrap: true, category: seoCat, action: "Trip Builder - Add", label: data.title, vars:[seoVars] }) + " href='#' data-tb-add class='tripAdd theme-color' data-seo-add-to-trip>Add to Trip Planner</a>",
+				removeButtonTemplate: "<a " + seotracker.addEvent({ wrap: true, category: seoCat, action: "Trip Builder - View", label: data.title, vars:[seoVars] }) + " href='"+ tripbuilder.path +"' data-tb-view class='tripView theme-color'>View Trip</a>"
+			});
+		}
+
+		// ADD tracking
+		root.find("[data-seo-website]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Visit Website", label: data.title, vars:[seoVars,{ui:'Conversion',lt:'Website',ot:'Text'}] }));
+		// root.find("[data-seo-email]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Email", label: data.title, vars:[seoVars,{lt:'Email',ot:'Text'}] }));
+		root.find("[data-seo-booking]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Booking", label: data.title, vars:[seoVars,{ui:'Conversion',lt:'Booking',ot:'Button'}] }));
+		root.find("[data-seo-social-facebook]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Facebook", label: data.title, vars:[seoVars] }));
+		root.find("[data-seo-social-twitter]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Twitter", label: data.title, vars:[seoVars] }));
+		root.find("[data-seo-social-youtube]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "YouTube", label: data.title, vars:[seoVars] }));
+		root.find("[data-seo-social-flickr]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Flickr", label: data.title, vars:[seoVars] }));
+		root.find("[data-seo-social-pinterest]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Pinterest", label: data.title, vars:[seoVars] }));
+		// root.find("[data-seo-social-foursquare]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "FourSquare", label: data.title, vars:[seoVars] }));
+		// root.find("[data-seo-opentable]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Open Table", label: data.title, vars:[seoVars] }));
+		// root.find("[data-seo-mapit]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Map It", label: data.title, vars:[seoVars] }));
+		root.find("[data-seo-streetview]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Street View", label: data.title, vars:[seoVars,{lt:'StreetView',ot:'Text'}] }));
+		root.find("[data-seo-nearby]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "What\'s Nearby", label: data.title, vars:[seoVars,{lt:'NearBy',ot:'Text'}] }));
+		// root.find("[data-seo-tab-details]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Click Details Tab | Detail", label: data.title, vars:[seoVars,{lt:'Tab',ot:'Text'}] }));
+		root.find("[data-seo-tab-amenities]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Click Amenities Tab | Detail", label: data.title, vars:[seoVars,{lt:'Tab',ot:'Text'}] }));
+		root.find("[data-seo-tab-meeting]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Click Meeting Facilities Tab | Detail", label: data.title, vars:[seoVars,{lt:'Tab',ot:'Text'}] }));
+		root.find("[data-seo-tab-tripadvisor]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Click Trip Advisor Tab | Detail", label: data.title, vars:[seoVars,{lt:'Tab',ot:'Text'}] }));
+		root.find("[data-seo-tab-events]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Click Events Tab | Detail", label: data.title, vars:[seoVars,{lt:'Tab',ot:'Text'}] }));
+		root.find("[data-seo-tab-offers]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Click Packages Tab | Detail", label: data.title, vars:[seoVars,{lt:'Tab',ot:'Text'}] }));
+		root.find("[data-seo-tab-facebook]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Click Facebook Tab | Detail", label: data.title, vars:[seoVars,{lt:'Tab',ot:'Text'}] }));
+		root.find("[data-seo-tab-twitter]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Click Twitter Tab | Detail", label: data.title, vars:[seoVars,{lt:'Tab',ot:'Text'}] }));
+		root.find("[data-seo-tab-yelp]").attr("onclick", seotracker.addEvent({ wrap: false, category: seoCat, action: "Click Yelp Tab | Detail", label: data.title, vars:[seoVars,{lt:'Tab',ot:'Text'}] }));
+		// END tracking
+
+
+		//events tracking
+		var eventseocat = "Events";
+		$('[data-seo-event]').each(function() {
+			var eventtitle = $(this).data("seoTitle");
+
+			$(this).find("[data-seo-add-to-trip]").attr("onclick", seotracker.addEvent({ wrap: false, category: eventseocat, action: "Add to Trip", label: eventtitle }));
+			$(this).find("[data-seo-detail]").attr("onclick", seotracker.addEvent({ wrap: false, category: eventseocat, action: "Link to Detail", label: eventtitle }));
+			$(this).find("[data-seo-detail-image]").attr("onclick", seotracker.addEvent({ wrap: false, category: eventseocat, action: "Link to Detail", label: eventtitle, vars: [{dimension1: "Image"}] }));
+			$(this).find("[data-seo-facebook]").attr("onclick", seotracker.addEvent({ wrap: false, category: eventseocat, action: 'Link to Facebook', label: eventtitle }));
+			$(this).find("[data-seo-twitter]").attr("onclick", seotracker.addEvent({ wrap: false, category: eventseocat, action: 'Link to Twitter', label: eventtitle }));
+		});
+
+		//offers tracking
+		var offerseocat = "Coupons";
+		$('[data-seo-offer]').each(function() {
+			var offertitle = $(this).data("seoTitle");
+				
+			$(this).find("[data-seo-detail-title]").attr("onclick", seotracker.addEvent({ wrap: false, category: offerseocat, action: "Link to Detail", label: offertitle, vars: [seoVars,{ui:'More Information',lt:"Detail",ot:"Title"}] }));
+			$(this).find("[data-seo-detail-more]").attr("onclick", seotracker.addEvent({ wrap: false, category: offerseocat, action: "Link to Detail", label: offertitle, vars: [seoVars,{ui:'More Information',lt:"Detail",ot:"More"}] }));
+			$(this).find("[data-seo-detail-details]").attr("onclick", seotracker.addEvent({ wrap: false, category: offerseocat, action: "Link to Detail", label: offertitle, vars: [seoVars,{ui:'More Information',lt:"Detail",ot: "Details"}] }));
+			$(this).find("[data-seo-detail-image]").attr("onclick", seotracker.addEvent({ wrap: false, category: offerseocat, action: "Link to Detail", label: offertitle, vars: [seoVars,{ui:'More Information',lt:"Detail",ot:"Image"}] }));
+			$(this).find("[data-seo-add-to-trip]").attr("onclick", seotracker.addEvent({ wrap: false, category: offerseocat, action: "Add to Trip", label: offertitle }));
+
+			//book now button on listing details
+			$('body').on('click', '.listingDetailContainer .buttons a.theme-small', function() {
+				setTimeout(function() {
+					versaTagObj.generateRequest('http://www.exploreasheville.com/contactpropertybutton');
+				}, 1000);
+			});
+
+		});
+	});
+</script>

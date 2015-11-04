@@ -260,5 +260,12 @@
 			dropdownAutoWidth: true,
 			width: "resolve"
 		});
+		//place on ares sidebar
+		$('body').on('click', '#lodging form button, .listingFilterContainer form button#filterSubmit', function() {
+			setTimeout(function() {
+				versaTagObj.generateRequest('http://www.exploreasheville.com/searchbookingsbutton');
+			}, 1000);
+		});
+
 	});
 </script>

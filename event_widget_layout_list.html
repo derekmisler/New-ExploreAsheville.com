@@ -537,4 +537,11 @@
 			$(this).closest("div").find(".datepicker").select();
 		});
 	});
+	//Place on Add to Trip Planner button on events
+	$('body').on('click', 'a.tripAdd', function() {
+		setTimeout(function() {
+			versaTagObj.generateRequest('http://www.exploreasheville.com/itineraryholiday');
+		}, 1000);
+	});
+
 </script>

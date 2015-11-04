@@ -1,0 +1,55 @@
+<div class="footer-bar">
+	<img src="/includes/public/assets/images/footer-bar.png" />
+</div>
+<div class="footer-toprow row">
+	<div class="medium-6 columns show-for-medium-up">
+		<div class="footer-logo"><img src="/includes/public/assets/images/logo-footer.gif" /></div>
+	</div>
+	<div class="medium-6 columns">
+		<div itemscope itemtype="http://schema.org/Organization" class="social-footer">
+			<!-- default in case they forget to add in social custom widget in body -->
+			<link itemprop="url" href="http://www.exploreasheville.com/">
+			<a itemprop="sameAs" class="social-icon fb" href="https://www.facebook.com/Asheville" target="_blank" title="Facebook"></a>
+			<a itemprop="sameAs" class="social-icon tw" href="https://twitter.com/VisitAsheville" target="_blank" title="Twitter"></a>
+			<a itemprop="sameAs" class="social-icon gp" href="https://plus.google.com/+exploreasheville" target="_blank" title="Google Plus"></a>			
+			<a itemprop="sameAs" class="social-icon pn" href="https://www.pinterest.com/visitasheville/" target="_blank" title="Pinterest"></a>
+			<a itemprop="sameAs" class="social-icon ig" href="https://instagram.com/visitasheville" target="_blank" title="Instgram"></a>
+		</div>
+	</div>	
+</div>
+<div class="footer-contentrow row">
+	<div class="medium-3 large-4 columns footer-left show-for-medium-up">		
+		{{sections.footer_left}}
+	</div>
+	<div class="medium-6 large-4 columns footer-mid show-for-medium-up">
+		{{sections.footer_middle}}		
+	</div>
+	<div class="medium-3 large-4 columns footer-right">
+		{{sections.footer_right}}
+		<div class="tripadvisor"><img src="/includes/public/assets/images/ta-logo.gif" /></div>
+		<div class="sv"><img src="/includes/public/assets/images/sv-logo.png" /></div>
+	</div>
+</div>
+{{sections.mobilead}}
+
+<script type="text/javascript">
+	require(["jquery", "domReady!"], function(validator) {
+		//pull in social links from custom widget (if it exists in body)
+		var social = $(".social-fixed");
+		if (social.length > 0) {
+			$('.social-footer').html(social.html());
+		}
+		//place on social icons in footer
+		$('body').on('click', '.social-footer a.social-icon', function() {
+			setTimeout(function() {
+				versaTagObj.generateRequest('http://www.exploreasheville.com/socialfollowbutton');
+			}, 1000);
+		});
+		//place on newsletter signup
+		$('body').on('click', '.newsletter-signup form button', function() {
+			setTimeout(function() {
+				versaTagObj.generateRequest('http://www.exploreasheville.com/enewssignupbutton');
+			}, 1000);
+		});
+	});
+</script>
