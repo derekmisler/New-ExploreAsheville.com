@@ -1,0 +1,264 @@
+<!--SVMETA
+{
+	"requireBundles" : [
+		"plugins_common_custom_ares_widget", 
+		"plugins_common_custom_themes", 
+		"site_jQueryUI_smoothness", 
+		"site_select2"
+	]
+}
+-->
+<div class="ares blue" data-sv-ares>
+	<p class="theme-color text-center"><em>Online Reservations</em></p>
+	<ul class="tabs" data-tab>
+		<li class="tab-title ldg active">
+			<a href="#lodging">Lodging</a>
+			<img src="/includes/public/assets/images/arrows/arrow_full_tiny_blue.png" />
+		</li>
+		<li class="tab-title pkg">
+			<a href="#packages">Packages</a>
+			<img src="/includes/public/assets/images/arrows/arrow_full_tiny_blue.png" />
+		</li>
+		<li class="tab-title act">
+			<a href="#activities">Activities</a>
+			<img src="/includes/public/assets/images/arrows/arrow_full_tiny_blue.png" />
+		</li>
+		<li class="tab-title flt">
+			<a href="#flights">Flights</a>
+			<img src="/includes/public/assets/images/arrows/arrow_full_tiny_blue.png" />
+		</li>
+	</ul>
+	<div class="tabs-content">
+		<div class="content active" id="lodging">
+			<form action="http://reservations.exploreasheville.com/6838_hotel-list.html" method="get" target="_blank">
+			<input id="HOTELLocation" name="locationID" type="hidden" value="m3116" />
+			<div class="row collapse">
+				<div class="small-6 columns pad-right">
+					<label for="checkInDate">Check In:</label>
+					<input class="datepicker theme-border-color" id="checkInDate" name="checkInDate" type="text" value="{{~plugins.moment(new Date()).format('MM/DD/YYYY')}}">
+				</div>
+				<div class="small-6 columns">
+					<label for="checkOutDate">Check Out:</label>
+					<input class="datepicker theme-border-color" id="checkOutDate" name="checkOutDate" type="text" value="{{~plugins.moment(new Date()).add(1, 'd').format('MM/DD/YYYY')}}">
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="small-4 columns pad-right">
+					<label for="numberOfRooms">Rooms:</label>
+					<select class="custom-select theme-border-color" id="numberOfRooms" name="numberOfRooms">
+					{{#~exec([1,2,3,4,5,6,7,8,9])}}
+					<option value="{{@data}}">{{@data}}</option>
+					{{/}}
+					</select>
+				</div>
+				<div class="small-4 columns pad-right">
+					<label for="numberOfAdults">Adults:</label>
+					<select class="custom-select theme-border-color" id="numberOfAdults" name="numberOfAdults">
+					{{#~exec([1,2,3,4])}}
+					<option value="{{@data}}">{{@data}}</option>
+					{{/}}
+					</select>
+				</div>
+				<div class="small-4 columns">
+					<label for="numberOfChildren">Kids:</label>
+					<select class="custom-select theme-border-color" id="numberOfChildren" name="numberOfChildren">
+					{{#~exec([0,1,2,3,4,5])}}
+					<option value="{{@data}}">{{@data}}</option>
+					{{/}}
+					</select>
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="buttons"><button class="theme-small" type="submit">Search</button></div>
+			</div>
+			</form>
+		</div>
+		<div class="content" id="packages">
+			<form action="http://reservations.exploreasheville.com/6838_package-search.html" method="get" target="_blank">
+			<input id="PACKAGELocation" name="locationID" type="hidden" value="m3116" />
+			<div class="row collapse">
+				<div class="small-6 columns pad-right">
+					<label for="pkgCheckInDate">Check In:</label>
+					<input class="datepicker theme-border-color" id="pkgCheckInDate" name="checkInDate" type="text" value="{{~plugins.moment(new Date()).format('MM/DD/YYYY')}}">
+				</div>
+				<div class="small-6 columns">
+					<label for="pkgCheckOutDate">Check Out:</label>
+					<input class="datepicker theme-border-color" id="pkgCheckOutDate" name="checkOutDate" type="text" value="{{~plugins.moment(new Date()).add(1, 'd').format('MM/DD/YYYY')}}">
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="small-4 columns pad-right">
+					<label for="pkgNumberOfRooms">Rooms:</label>
+					<select class="custom-select theme-border-color" id="pkgNumberOfRooms" name="numberOfRooms">
+					{{#~exec([1,2,3,4,5,6,7,8,9])}}
+					<option value="{{@data}}">{{@data}}</option>
+					{{/}}
+					</select>
+				</div>
+				<div class="small-4 columns pad-right">
+					<label for="pkgNumberOfAdults">Adults:</label>
+					<select class="custom-select theme-border-color" id="pkgNumberOfAdults" name="numberOfAdults">
+					{{#~exec([1,2,3,4])}}
+					<option value="{{@data}}">{{@data}}</option>
+					{{/}}
+					</select>
+				</div>
+				<div class="small-4 columns">
+					<label for="pkgNumberOfChildren">Kids:</label>
+					<select class="custom-select theme-border-color" id="pkgNumberOfChildren" name="numberOfChildren">
+					{{#~exec([0,1,2,3,4,5])}}
+					<option value="{{@data}}">{{@data}}</option>
+					{{/}}
+					</select>
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="buttons"><button class="theme-small" type="submit">Search</button></div>
+			</div>
+			</form>
+		</div>
+		<div class="content" id="activities">
+			<form action="http://reservations.exploreasheville.com/6838_activity-list.html" method="get" target="_blank">
+			<input id="ATTRACTIONLocation" name="locationID" type="hidden" value="m3116" />
+			<div class="row collapse">
+				<div class="small-12 columns">
+					<label for="attractionName">Keyword Search Term:</label>
+					<input class="theme-border-color" id="attractionName" name="attractionName" type="text" value="">
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="small-12 columns">
+					<label for="attractionCategoryID">Attraction Type:</label>
+					<select class="custom-select theme-border-color" id="attractionCategoryID" name="attractionCategoryID">
+					<option value="0">All</option>
+					<option value="122">Activities for Couples</option>
+					<option value="123">Activities for Kids</option>
+					<option value="103">Arts &amp; Culture</option>
+					<option value="128">Historical Interest</option>
+					<option value="136">Hop on/Hop off</option>
+					<option value="8">Tours &amp; Sightseeing</option>
+					</select>
+				</div>				
+			</div>
+			<div class="row collapse">
+				<div class="buttons"><button class="theme-small" type="submit">Search</button></div>
+			</div>
+			</form>
+		</div>
+		<div class="content" id="flights">
+			<form action="http://reservations.exploreasheville.com/6838_flight-search.html" method="get" target="_blank">
+			<input name="flights[flightSearchType]" type="hidden" value="roundtrip" />
+			<div class="row collapse">
+				<div class="small-6 columns pad-right">
+					<label for="segment0DepartureLocation">From:</label>
+					<input class="theme-border-color" id="segment0DepartureLocation" name="flights[segments][0][departureLocation]" type="text" value="">
+				</div>
+				<div class="small-6 columns">
+					<label for="segment0ArrivalLocation">To:</label>
+					<input class="theme-border-color" id="segment0ArrivalLocation" name="flights[segments][0][arrivalLocation]" type="text" value="">
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="small-6 columns pad-right">
+					<label for="segment0Date">Depart:</label>
+					<input class="datepicker theme-border-color" id="segment0Date" name="flights[segments][0][date]" type="text" value="{{~plugins.moment(new Date()).format('MM/DD/YYYY')}}">
+				</div>
+				<div class="small-6 columns">
+					<label for="segment0Time">&nbsp;</label>
+					<select class="custom-select theme-border-color" id="segment0Time" name="flights[segments][0][time]">
+					<option value="">Any Time</option><option value="0630">Early Morning</option><option value="0845">Morning</option><option value="1230">Midday</option><option value="1530">Early Evening</option><option value="1930">Evening</option><option value="0000">12:00 AM</option><option value="0100">1:00 AM</option><option value="0200">2:00 AM</option><option value="0300">3:00 AM</option><option value="0400">4:00 AM</option><option value="0500">5:00 AM</option><option value="0600">6:00 AM</option><option value="0700">7:00 AM</option><option value="0800">8:00 AM</option><option value="0900">9:00 AM</option><option value="1000">10:00 AM</option><option value="1100">11:00 AM</option><option value="1200">12:00 PM</option><option value="1300">1:00 PM</option><option value="1400">2:00 PM</option><option value="1500">3:00 PM</option><option value="1600">4:00 PM</option><option value="1700">5:00 PM</option><option value="1800">6:00 PM</option><option value="1900">7:00 PM</option><option value="2000">8:00 PM</option><option value="2100">9:00 PM</option><option value="2200">10:00 PM</option><option value="2300">11:00 PM</option> 
+					</select>
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="small-6 columns pad-right">
+					<label for="segment1Date">Return:</label>
+					<input class="datepicker theme-border-color" id="segment1Date" name="flights[segments][1][date]" type="text" value="{{~plugins.moment(new Date()).format('MM/DD/YYYY')}}">
+				</div>
+				<div class="small-6 columns">
+					<label for="segment1Time">&nbsp;</label>
+					<select class="custom-select theme-border-color" id="segment1Time" name="flights[segments][1][time]">
+					<option value="">Any Time</option><option value="0630">Early Morning</option><option value="0845">Morning</option><option value="1230">Midday</option><option value="1530">Early Evening</option><option value="1930">Evening</option><option value="0000">12:00 AM</option><option value="0100">1:00 AM</option><option value="0200">2:00 AM</option><option value="0300">3:00 AM</option><option value="0400">4:00 AM</option><option value="0500">5:00 AM</option><option value="0600">6:00 AM</option><option value="0700">7:00 AM</option><option value="0800">8:00 AM</option><option value="0900">9:00 AM</option><option value="1000">10:00 AM</option><option value="1100">11:00 AM</option><option value="1200">12:00 PM</option><option value="1300">1:00 PM</option><option value="1400">2:00 PM</option><option value="1500">3:00 PM</option><option value="1600">4:00 PM</option><option value="1700">5:00 PM</option><option value="1800">6:00 PM</option><option value="1900">7:00 PM</option><option value="2000">8:00 PM</option><option value="2100">9:00 PM</option><option value="2200">10:00 PM</option><option value="2300">11:00 PM</option> 
+					</select>
+				</div>
+			</div>			
+			<div class="row collapse">
+				<div class="small-4 columns pad-right">
+					<label for="fltNumberOfAdults">Adults:</label>
+					<select class="custom-select theme-border-color" id="fltNumberOfAdults" name="numberOfAdults">
+					{{#~exec([1,2,3,4,5])}}
+					<option value="{{@data}}">{{@data}}</option>
+					{{/}}
+					</select>
+				</div>
+				<div class="small-4 columns pad-right">
+					<label for="fltNumberOfChildren">Kids:</label>
+					<select class="custom-select theme-border-color" id="fltNumberOfChildren" name="numberOfChildren">
+					{{#~exec([0,1,2,3,4,5])}}
+					<option value="{{@data}}">{{@data}}</option>
+					{{/}}
+					</select>
+				</div>
+				<div class="small-4 columns">
+					<label for="fltNumberOfLapInfants">Infants:</label>
+					<select class="custom-select theme-border-color" id="fltNumberOfLapInfants" name="flights[numberOfLapInfants]">
+					{{#~exec([0,1,2,3,4,5])}}
+					<option value="{{@data}}">{{@data}}</option>
+					{{/}}
+					</select>
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="buttons"><button class="theme-small" type="submit">Search</button></div>
+			</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<script>
+	require(["jquery", "jqueryui", "select2", "domReady!"], function($) {
+		var root = $("[data-sv-ares]");
+		root.find("#checkInDate.datepicker").datepicker({
+			minDate: '0',
+			onSelect: function () {
+				setTimeout(function () {
+					var sdate = $("#checkInDate.datepicker").datepicker('getDate', '+1d');
+					sdate.setDate(sdate.getDate() + 1);
+					$("#checkOutDate.datepicker").datepicker('option', 'minDate', sdate);
+				}, 90);
+			}
+		});
+		root.find("#checkOutDate.datepicker").datepicker({minDate: '+1D'});
+		root.find("#pkgCheckInDate.datepicker").datepicker({
+			minDate: '0',
+			onSelect: function () {
+				setTimeout(function () {
+					var sdate = $("#pkgCheckInDate.datepicker").datepicker('getDate', '+1d');
+					sdate.setDate(sdate.getDate() + 1);
+					$("#pkgCheckOutDate.datepicker").datepicker('option', 'minDate', sdate);
+				}, 90);
+			}
+		});
+		root.find("#pkgCheckOutDate.datepicker").datepicker({minDate: '+1D'});
+		root.find("#segment0Date.datepicker").datepicker({
+			minDate: '0',
+			onSelect: function () {
+				setTimeout(function () {
+					var sdate = $("#segment0Date.datepicker").datepicker('getDate', '+1d');
+					sdate.setDate(sdate.getDate() + 1);
+					$("#segment1Date.datepicker").datepicker('option', 'minDate', sdate);
+				}, 90);
+			}
+		});
+		root.find("#segment1Date.datepicker").datepicker({minDate: '+1D'});
+
+		root.find(".custom-select").select2({
+			minimumResultsForSearch: Infinity,
+			containerCssClass: "themed",
+			dropdownCssClass: "ares blue",
+			dropdownAutoWidth: true,
+			width: "resolve"
+		});
+	});
+</script>

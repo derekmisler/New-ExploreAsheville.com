@@ -1,0 +1,540 @@
+<!--SVMETA
+{
+	"requireBundles" : [
+		"site_select2", 
+		"plugins_events_shared", 
+		"plugins_common_custom_layout", 
+		"plugins_common_custom_map",
+		"plugins_common_custom_themes", 
+		"site_jQueryUI_smoothness"
+	], "partials" : [
+		{ "plugin" : "common", "name" : "custom_info_window" },
+		{ "plugin" : "events", "name" : "custom_event_list_filter" },
+		{ "plugin" : "events", "name" : "custom_event_list_pager" },
+		{ "plugin" : "events", "name" : "custom_event_list_item" }
+	]
+}
+-->
+
+<div class="eventsContainer blue" id="events_{{guid}}">
+	{{:rssUrl}}
+		<div class="rss"><a class="rssLink" href="{{rssUrl}}" target="_blank"><i class="fa fa-rss-square rssIcon"></i></a></div>
+	{{/rssUrl}}
+
+	<div class="eventsFormContainer{{!showSearchBox}} hidden{{/showSearchBox}}" data-sv-eventsFormContainer></div>
+	<div class="gMapContainer" data-gMapContainer>
+		<div class="gMapHolder" data-mapHolder></div>		
+	</div>
+	<div class="items" data-sv-eventsList>
+		<div class="loading"><img src="/includes/public/assets/images/ajax-loader-big.gif"/></div>
+	</div>
+</div>
+
+<script type="text/template" data-sv-infoWindowTemplate>{{~partial("custom_info_window")}}</script>
+<script type="text/template" data-sv-eventsFormTemplate>{{~partial("custom_event_list_filter")}}</script>
+<script type="text/template" data-sv-pagerTemplate>{{~partial("custom_event_list_pager")}}</script>
+<script type="text/template" data-sv-eventListItemTemplate>{{~partial("custom_event_list_item")}}</script>
+
+<script type="text/template" data-sv-eventsListTemplate>
+{{$}}
+
+	{{!events}}
+		<p class="noEvents">No events found.</p>
+	{{/events}}
+
+	{{:events}}
+	<div class="eventPagerTop"> 
+		{{>pager}}
+	</div>
+	<div class="custom_layout">
+	{{#events}}
+
+		{{:date}}
+		{{!~equal(data.date.isSame(helpers.var.previousDate), true)}}
+			<div class="event-date-heading theme-color">{{date.format("LL")}}</div>
+			{{~setVar('previousDate', data.date)}}
+		{{/}}
+		{{/date}}
+		{{!~equal(-data.sort,"name")}}
+			{{!~equal(data.typeName,helpers.var.previousTypeName)}}
+				<div class="event-type-heading theme-color">{{typeName}}</div>
+				{{~setVar('previousTypeName', data.typeName)}}
+			{{/}}
+		{{/}}
+		{{>eventListItem}}
+	{{/events}}
+	</div>
+
+	{{!~equal(data.totalPages, 1)}}
+	<div class="eventPagerBottom"> 
+		{{>pager}}
+	</div>
+	{{/}}
+
+	{{/events}}
+
+{{/}}
+</script>
+
+<script>
+	require([
+		"jquery",
+		"goatee",
+		"qs",
+		"lodash",
+		"moment",
+		"sv_stringLib",
+		"sv_urlLib",
+		"sv_validator",
+		"plugins_events/EventsApi",
+		"plugins_common_custom_map",
+		"plugins_common_custom_seotracker",
+		"plugins_common_custom_socialurls",
+		"async",
+		"geodist",		
+		"sv_load!site_tripbuilder",
+		"jqueryui",
+		"select2",
+		"domReady!"
+	], function($, gt, qs, lodash, moment, stringLib, urlLib, validator, EventsApi, 
+			mapObj, seotracker, social, async, Geodist, tripbuilder) {
+
+		// add goatee plugins
+		var goatee = new gt.Goatee();
+		goatee.addPlugin("stringLib", stringLib);
+
+		var eventsApi = new EventsApi({{eventLayoutArgsJSON}});
+		var moduleData = {{moduleDataJSON}};
+		var geoSettings = {{geoSettingsJSON}};
+		var pxFromTopToScroll = 0;
+		var elementToScrollTo = '.eventPagerTop .filterOptions';
+		var scrollSpeed = 175;
+
+		// TODO - move to configuration file
+		var dateFormat = $.datepicker.regional[""].dateFormat;
+
+		// Templates
+		var eventsFormTmpl = $("[data-sv-eventsFormTemplate]").html();
+		var eventsListTmpl = $("[data-sv-eventsListTemplate]").html();
+		var eventListItemTmpl = $("[data-sv-eventListItemTemplate]").html();
+		var infoWindowTmpl = $("[data-sv-infoWindowTemplate]").html();
+		var pagerTmpl = $("[data-sv-pagerTemplate]").html();
+
+		// Cached jQuery objects
+		var $root = $("#events_{{guid}}");
+		var $formContainer = $root.find("[data-sv-eventsFormContainer]");
+		var $eventsList = $root.find("[data-sv-eventsList]");
+		var $form;
+		var $startDate;
+		var $endDate;
+		var coordinates;
+
+		var formValidator;
+
+		var addSEMTracking = function(data) {
+			var seocat = "Events";
+			var detailAction = "Link to Detail";
+
+			$('[data-seo-event]').each(function() {
+				var title = $(this).data("seoTitle");
+
+				$(this).find("[data-seo-mapit]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: "Map It", label: title }));
+				$(this).find("[data-seo-add-to-trip]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: "Add to Trip", label: title }));
+				$(this).find("[data-seo-detail]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: detailAction, label: title }));
+				$(this).find("[data-seo-detail-image]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: detailAction, label: title, vars: [{dimension1: "Image"}] }));
+				$(this).find("[data-seo-venue]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: 'Link to Venue', label: title }));
+				$(this).find("[data-seo-facebook]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: 'Link to Facebook', label: title }));
+				$(this).find("[data-seo-twitter]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: 'Link to Twitter', label: title }));
+			});
+		};
+
+
+		/*********** TODO - Fix Module System ********/
+		/*********** Begin Hack Attack ***************/
+		moduleData.showSearchBox = (moduleData.showSearchBox === "true");
+		/*********** End Hack Attack *****************/
+
+		/*********** Default Search Query ************/
+		var defaultQuery = {
+			startDate : moment().format("l"),
+			categories : moduleData.eventCategories,
+			page : 1,
+			pageSize : 15,
+			keyword : "",
+			sort : "date"
+		};
+		/********************************************/
+
+		// check if default sort set in widget
+		if (moduleData.defaultSort !== undefined) {
+			defaultQuery.sort = moduleData.defaultSort;
+		}
+
+		var today = moment().format("l");
+		var weekFromToday = moment().add(6, "days").format("l");
+		var monthFromToday = moment().add(1, "months").format("l");
+
+		var day = { startDate : today, endDate : today };
+		var week = { startDate : today, endDate : weekFromToday };
+		var month = { startDate : today, endDate : monthFromToday };
+
+		// Set default search frame from widget options
+		if (moduleData.defaultRange == "day") {
+			defaultQuery.endDate = today;
+		} else if (moduleData.defaultRange == "month") {
+			defaultQuery.endDate = monthFromToday;
+		} else {
+			defaultQuery.endDate = weekFromToday;
+		}			
+		var searchQuery = new urlLib.SearchQuery(defaultQuery);
+
+		window.onpopstate = function(event) {
+			search();
+		}
+
+		// Search functionality here...
+		$formContainer.on("submit", "form", function(e) {
+			e.preventDefault();
+
+			var formData = qs.parse($(this).serialize());
+			if (!formData.categories) formData.categories = "";
+			if (formData.categories instanceof Array && formData.categories[0] === "") formData.categories = "";
+			formData.page = 1;
+
+			//need to validate first
+			formValidator.validateForm(function(res) {
+				if (res.valid) {
+					setQuery(searchQuery.getQueryString(formData));
+				}
+			});
+		})
+		.on("click", "[data-sv-timeWindow] a", function(e) {
+			e.preventDefault();
+			setQuery(e.target.href);
+		});
+
+		$eventsList.on("click", "[data-sv-filterOptions] a", function(e) {
+			e.preventDefault();
+			setQuery(e.target.href);
+		});
+
+		$eventsList.on("click", "[data-sv-filterOptions] i", function(e) {
+			e.preventDefault();
+			var href = $(this).parent().attr('href');
+			setQuery(href);
+			$("html, body").animate({ scrollTop: $(elementToScrollTo).offset().top + pxFromTopToScroll }, scrollSpeed);
+		});
+		
+		if ($root.find("[data-sv-eventPrint]")) {
+			$root.find("[data-sv-eventPrint]").on("click", function(e) {
+				//e.preventDefault();
+				searchQuery.currentQuery = getQueryStringQuery();
+				var query = searchQuery.getFullQuery();
+				var printfilter = {};
+				printfilter.startDate = query.startDate;
+				printfilter.endDate = query.endDate;
+				printfilter.categories = query.categories;
+				var printopts = { sort: { date : 1, title : 1 } };
+				$(this).attr("href", "{{printUrl}}?" + qs.stringify({filter: printfilter}) + "&" + qs.stringify({options: printopts}));
+			});
+		}
+		
+		mapObj.init({
+			options : { node: $root }
+		});
+		mapObj.initListInterface();
+		mapObj.renderMap();
+		
+		// Run on page load
+		eventsApi.getMetadata(function(err, formData) {
+
+			var query = getQueryStringQuery();
+
+			// Get current geolocation
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(function(position) {
+
+					var inRange = new Geodist({
+						start : {
+							lat : position.coords.latitude,
+							lon : position.coords.longitude
+						},
+						end : {
+							lat : geoSettings.clientLat,
+							lon : geoSettings.clientLong
+						}
+					})
+					.inRange({
+						limit : geoSettings.maxRangeMiles,
+						unit : "miles"
+					});
+
+					// Set the lat and long as part of the default query
+					if (inRange) {
+						coordinates = position.coords;
+						search();
+					}
+				});
+			}
+
+			renderForm(formData);
+			search();
+		});
+
+		/** Function declarations **/
+		function renderForm(formData) {
+			searchQuery.currentQuery = getQueryStringQuery();
+			formData.dateFormat = dateFormat;
+
+			$formContainer.html(goatee.fill(eventsFormTmpl, {
+				today : today,
+				weekFromToday : weekFromToday,
+				monthFromToday : monthFromToday,
+				formData : formData,
+				showSearchBox : moduleData.showSearchBox,
+				searchQuery : searchQuery
+			}));
+
+			// Ensure the start date cannot be after the end date and vice versa
+			$startDate = $formContainer.find("[data-sv-startDate]");
+			$startDate.datepicker({
+				minDate : 0,
+				onSelect : function(dateText) {
+					var start = moment(new Date(dateText));
+					var end = moment($endDate.datepicker("getDate"));
+					if (start.isAfter(end)) {
+						$endDate.datepicker("setDate", start.toDate());
+					}
+					$formContainer.find("[data-sv-timeWindow] a").removeClass("theme-small");
+				}
+			});
+			$endDate = $formContainer.find("[data-sv-endDate]");
+			$endDate.datepicker({
+				minDate : 0,
+				onSelect : function(dateText) {
+					var start = moment($startDate.datepicker("getDate"));
+					var end = moment(new Date(dateText));
+					if (end.isBefore(start)) {
+						$startDate.datepicker("setDate", end.toDate());
+					}
+					$formContainer.find("[data-sv-timeWindow] a").removeClass("theme-small");
+				}
+			});
+
+			$formContainer.find("#categories").select2({
+				minimumResultsForSearch: Infinity,
+				containerCssClass: "themed",
+				dropdownCssClass: "blue",
+				dropdownAutoWidth: true,
+				width: "resolve"
+			});
+
+			$form = $formContainer.find("form");
+
+			$day = $form.find("[data-sv-day]");
+			$week = $form.find("[data-sv-week]");
+			$month = $form.find("[data-sv-month]");
+
+			$form.sv_validator();
+			formValidator = $form.data("sv_validator");
+		}
+
+		function search() {
+			searchQuery.currentQuery = getQueryStringQuery();
+			var query = searchQuery.getFullQuery();
+
+			/************ Update Form Values *************/
+			$form.find(".startDate").val(query.startDate);
+			$form.find(".endDate").val(query.endDate);			
+			$form.find("#keyword").val(query.keyword);
+
+			if (query.categories !== undefined && query.categories.length == 1) {
+				$form.find("#categories").select2("val", query.categories);
+			}
+
+			var selectedDate = { 
+				startDate : query.startDate,
+				endDate : query.endDate
+			};
+
+			// have to force page 1, probably a better way to do this...
+			$day.attr("href", searchQuery.getQueryString($.extend({page:1},day)))
+				.toggleClass("theme-small", lodash.isEqual(selectedDate, day));
+			$week.attr("href", searchQuery.getQueryString($.extend({page:1},week)))
+				.toggleClass("theme-small", lodash.isEqual(selectedDate, week));
+			$month.attr("href", searchQuery.getQueryString($.extend({page:1},month)))
+				.toggleClass("theme-small", lodash.isEqual(selectedDate, month));
+			/*********************************************/
+
+			formValidator.validateForm();
+
+			// Validate categories
+			query.categories = lodash.union(query.categories, moduleData.categories);
+
+			// Translate to query
+			var filter = {
+				"dates.eventDate" : { $gte : query.startDate, $lte : query.endDate }
+			};
+
+			if (query.categories) {
+				filter.$or = query.categories.map(function(category) {
+					return { "categories.catId" : category };
+				});
+			}
+
+			if (query.keyword) {
+				filter.$text = {
+					$search : query.keyword
+				};
+			}
+
+			var options = {
+				skip : (parseInt(query.page) - 1) * parseInt(query.pageSize),
+				limit : parseInt(query.pageSize),
+				sort : {}
+			};
+
+			// Secondary sort ordering
+			if (coordinates && query.sort === "distance") {
+
+				options.custom = {};
+				options.custom.distance = {
+					latitude : coordinates.latitude,
+					longitude : coordinates.longitude
+				};
+
+				eventsApi.findEvents(cleanFilter(filter), options, handleSearchResults);
+			} else if (query.sort === "date") {
+
+				options.sort.date = 1;
+				options.sort.rank = 1;
+				options.sort.title = 1;
+
+				eventsApi.findEventsByDate(cleanFilter(filter), options, handleSearchResults);
+			} else {
+
+				options.sort.rank = 1;
+				options.sort.title = 1;
+
+				eventsApi.findEvents(cleanFilter(filter), options, handleSearchResults);
+			}
+		}
+
+		function handleSearchResults(err, data) {
+
+			/* Handle additional template data manipulation here */
+			if (data.events !== undefined && data.events.length > 0) {
+				for (var i=0; i<data.events.length; i++) {
+					if (data.events[i].nextDate !== undefined)
+						data.events[i].nextDate = moment(data.events[i].nextDate);
+				}
+			}
+
+			data.searchQuery = searchQuery;
+			data.showSearchBox = moduleData.showSearchBox;
+			data.hasCoordinates = !!coordinates;			
+			
+			// begin: Google Maps logic
+			var placemarks = [];
+			var eventIds = [];
+			
+			data.events.forEach(function(event) {
+				if (event.nextDate !== undefined)
+					event.nextDate = moment(event.nextDate);
+
+				if (event.latitude && event.longitude && eventIds.indexOf(event.recId) === -1) {
+
+					eventIds.push(event.recId);
+
+					placemarks.push({
+						id : "event_" + event.recId,
+						marker : {
+							position : [event.latitude, event.longitude]
+						},
+						infoWindow : {
+							content : goatee.fill(infoWindowTmpl, event),
+							maxWidth : 640
+						}
+					});
+
+					if (coordinates) {
+						event.distance = new Geodist({ 
+							start : { 
+								lat : event.latitude, 
+								lon : event.longitude 
+							},
+							end : {
+								lat : coordinates.latitude, 
+								lon : coordinates.longitude
+							}
+						});
+					}
+				}
+				
+				//validate social links					
+				if (event.udfs !== undefined && event.udfs !== null) {
+					$.each(event.udfs, function(key, obj) {
+						if (obj.fieldid == 580) {
+							obj.value = social.getValidSocialUrl({ url : obj.value , urlType : "facebook" });
+						} else if (obj.fieldid == 581) {
+							obj.value = social.getValidSocialUrl({ url : obj.value , urlType : "twitter" });
+						}
+					});
+				}
+			});
+
+			$eventsList.html(goatee.fill(eventsListTmpl, data, {
+				eventListItem : eventListItemTmpl,
+				pager : pagerTmpl
+			}));
+			
+			mapObj.setState({
+				placemarksAdded : false,
+				placemarks : placemarks
+			});
+			// end: Google Maps logic
+			
+			if (tripbuilder !== undefined) {
+				tripbuilder.initButtons({ 
+					root : $root,
+					addButtonTemplate: "<a href='#' data-tb-add class='tripAdd theme-color' data-seo-add-to-trip>Add to Trip Planner</a>",
+					removeButtonTemplate: "<a href='"+ tripbuilder.path +"' data-tb-view class='tripView theme-color'>View Trip</a>"
+				});
+			}
+
+			addSEMTracking(data);
+		}
+
+		function getQueryStringQuery() {
+			var url = window.location.search;
+			var query = qs.parse(urlLib.parse(url).query);
+			return query;
+		}
+
+		function setQuery(href) {
+			if (href !== window.location.href) {
+				history.pushState(null, "", href);
+				search();
+			}
+		}
+
+		function cleanFilter(filter) {
+			for (var key in filter) {
+				if (filter.hasOwnProperty(key)) {
+					if (filter[key] === undefined || (typeof filter[key] === "string" && filter[key] === 0 || filter[key] === "0" || filter[key].length === 0)) {
+						delete filter[key];
+					} else if (typeof filter[key] === "object" ) {
+						if ($.isEmptyObject(cleanFilter(filter[key]))) {
+							delete filter[key];
+						}
+					}
+				}
+			}
+			return filter;
+		}
+
+		$root.on("click", ".ui-datepicker-trigger", function() {
+			$(this).closest("div").find(".datepicker").select();
+		});
+	});
+</script>

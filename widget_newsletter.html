@@ -1,0 +1,118 @@
+<!--SVMETA
+{
+	"requireBundles" : ["plugins_common_custom_custom_widgets", "plugins_common_custom_themes"]
+}
+-->
+{{:~equal(data.data.layout === "sidebar" || data.data.layout === undefined, true)}}
+<div class="newsletter-signup green" data-sv-newsletter="{{guid}}">
+	<div class="show-for-medium-up">
+		<form method="post" action="http://click.bsftransmit7.com/OptIn.aspx?OptinFormID=4&26241823=169" data-sv-news-form>
+		<input type="hidden" name="OptinFormID" value="4" />
+		<input type="hidden" name="26241823" value="169" />
+		<div class="news-title theme-color">Sign Up for the Asheville<br/>Traveler E-Newsletter</div>
+		<div class="row collapse">
+			<input class="theme-border-color theme-color" name="UEmail" type="text" placeholder="Email Address" value="" data-sv-news-input>
+		</div>	
+		<div class="row collapse">
+			<button class="theme-small" type="submit" data-sv-news-button data-seo-enews-sidebar>Sign-Up</button>
+		</div>
+		</form>
+	</div>
+	<div class="hide-for-medium-up">
+		<form method="post" action="http://click.bsftransmit7.com/OptIn.aspx?OptinFormID=4&26241823=169" data-sv-news-form>
+		<input type="hidden" name="OptinFormID" value="4" />
+		<input type="hidden" name="26241823" value="169" />
+		<div class="news-title theme-color">Asheville Traveler E-Newsletter</div>
+		<div class="row">
+			<div class="small-6 columns">
+				<input class="theme-border-color theme-color" name="UEmail" type="text" placeholder="Email Address" value="" data-sv-news-input>
+			</div>
+			<div class="small-6 columns">
+				<button class="theme-small" type="submit" data-sv-news-button data-seo-enews-sidebar>Sign-Up</button>
+			</div>		
+		</div>
+		</form>
+	</div>	
+</div>
+{{/}}
+
+{{:~equal(data.data.layout, "footer")}}
+<div class="newsletter-signup footer brown" data-sv-newsletter="{{guid}}">
+	<div class="news-title theme-color">Sign Up for the Asheville<br/>Traveler E-Newsletter</div>
+	<form method="post" action="http://click.bsftransmit7.com/OptIn.aspx?OptinFormID=4&26241823=169" data-sv-news-form>
+	<input type="hidden" name="OptinFormID" value="4" />
+	<input type="hidden" name="26241823" value="169" />
+	<div class="row collapse">
+		<div class="small-6 columns">
+			<input class="theme-border-color theme-color" name="UEmail" type="text" placeholder="Email Address" value="" data-sv-news-input>
+		</div>	
+		<div class="small-6 columns">
+			<button class="theme-small" type="submit" data-sv-news-button data-seo-enews-footer>Sign-Up</button>
+		</div>
+	</div>
+	</form>
+</div>
+{{/}}
+
+{{:~equal(data.data.layout, "homepage")}}
+<div class="newsletter-signup homepage green" data-sv-newsletter="{{guid}}">
+	<div class="show-for-large-up">
+		<form method="post" action="http://click.bsftransmit7.com/OptIn.aspx?OptinFormID=4&26241823=169" data-sv-news-form>
+		<input type="hidden" name="OptinFormID" value="4" />
+		<input type="hidden" name="26241823" value="169" />
+		<div class="news-title theme-color">Sign Up for the Asheville Traveler E-Newsletter</div>
+		<div class="news-cont">
+			<div class="news-row">
+				<div class="news-left"><img src="/includes/public/assets/images/newsletter-bike.png" /></div>
+				<div class="news-middle"><input class="theme-border-color theme-color" name="UEmail" type="text" placeholder="Email Address" value="" data-sv-news-input></div>
+				<div class="news-right"><button class="theme-small" type="submit" data-sv-news-button data-seo-enews-homepage>Sign-Up</button></div>
+			</div>
+		</div>
+		</form>
+	</div>
+	<div class="hide-for-large-up">
+		<form method="post" action="http://click.bsftransmit7.com/OptIn.aspx?OptinFormID=4&26241823=169" data-sv-news-form>
+		<input type="hidden" name="OptinFormID" value="4" />
+		<input type="hidden" name="26241823" value="169" />
+		<div class="news-title theme-color">Asheville Traveler E-Newsletter</div>
+		<div class="row">
+			<div class="small-6 columns">
+				<input class="theme-border-color theme-color" name="UEmail" type="text" placeholder="Email Address" value="" data-sv-news-input>
+			</div>
+			<div class="small-6 columns">
+				<button class="theme-small" type="submit" data-sv-news-button data-seo-enews-homepage >Sign-Up</button>
+			</div>
+		</div>
+		</form>
+	</div>	
+</div>
+{{/}}
+
+<script>
+	require(["jquery", "plugins_common_custom_seotracker", "sv_validator", "domReady!"], function($, seotracker, validator) {
+		var root = $("div[data-sv-newsletter={{guid}}]");
+		var form = root.find("form[data-sv-news-form]");
+		var input = root.find("[data-sv-news-input]");
+
+		//make sure input isnt empty
+		form.on("submit", function(e){
+			//e.preventDefault();
+
+			if(input.val().length > 0){
+				$(".newsletter-signup").animate({opacity:0}, 500, function() {
+					$(this).html('<div class="news-title theme-color">Thanks!<br>Click the link in your email to confirm your&nbsp;subscription.</div>');
+				});
+				$(".newsletter-signup").animate({opacity: 1}, 500);
+				//this.submit();
+				return true;
+			}else{
+				alert("Please enter your email address before clicking submit.")
+				return false;
+			}
+		});
+
+		root.find("[data-seo-enews-sidebar]").attr("onMouseDown", seotracker.addEvent({category: 'Sidebar', action: 'eNews Signup Widget', jslabel: 'window.location.pathname', wrap: false }));
+		root.find("[data-seo-enews-footer]").attr("onMouseDown", seotracker.addEvent({category: 'Footer', action: 'eNews Signup Widget', jslabel: 'window.location.pathname', wrap: false }));
+		root.find("[data-seo-enews-homepage]").attr("onMouseDown", seotracker.addEvent({category: 'Homepage', action: 'eNews Signup Widget', jslabel: 'window.location.pathname', wrap: false }));
+	});
+</script>

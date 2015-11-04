@@ -1,0 +1,264 @@
+<!--SVMETA
+{
+	"requireBundles" : ["plugins_common_custom_custom_widgets", "plugins_common_custom_themes", "site_select2"]
+}
+-->
+<div class="discover yellow" data-discover-guid="{{guid}}">
+	<div class="title theme-color">Discover</div>
+<form>
+	<div class="discover-form">
+		<div class="fields clearfix">
+			<ul>
+				<li class="field">
+					<select class="theme-border-color theme-color" id="type" name="type">
+					<option value=""></option>
+					<option value="stories">All Stories</option>
+					<option value="listings">All Listings</option>
+					<option value="events">All Events</option>
+					<option value="offers">All Packages/Deals</option>
+					</select>
+				</li>
+				<li class="field">
+					<select class="theme-border-color theme-color" id="cat" name="cat" disabled="disabled">
+					<option value="">All Categories</option>
+					</select>
+				</li>
+				<li class="field">
+					<select class="theme-border-color theme-color" id="region" name="region" disabled="disabled">
+					<option value="">All Regions</option>
+					</select>
+				</li>
+				<li class="field sep theme-color">or</li>
+				<li class="field">
+					<input class="theme-border-color theme-color theme-placeholder" id="keyword" name="keyword" type="text" placeholder="Keywords" value="">
+				</li>
+			</ul>
+		</div>
+		<div class="buttons">
+			<button class="theme-small" id="searchbutton" type="button">Search</button>
+		</div>
+	</div>
+</form>
+</div>
+
+<script>
+	require(["jquery", "sv_arrayLib", "qs", "plugins_core", "select2", "domReady!"], function($, arrayLib, qs, core) {
+		var root = $("div[data-discover-guid={{guid}}]");
+		var typedd = root.find("#type");
+		var catdd = root.find("#cat");
+		var regiondd = root.find("#region");
+
+		// styling
+		typedd.select2({
+			minimumResultsForSearch: Infinity,
+			placeholder: "Select an Option...",
+			containerCssClass : "themed",
+			dropdownCssClass : "yellow",
+			dropdownAutoWidth: true
+		});		
+
+		var initCatDD = function() {
+			catdd.select2({
+				minimumResultsForSearch: Infinity,
+				containerCssClass : "themed",
+				dropdownCssClass : "yellow",
+				dropdownAutoWidth: true
+			});
+		}
+
+		var initRegionDD = function() {
+			regiondd.select2({
+				minimumResultsForSearch: Infinity,
+				containerCssClass : "themed",
+				dropdownCssClass : "yellow",
+				dropdownAutoWidth: true
+			});
+		}
+		initCatDD();
+		initRegionDD();
+
+		var resizeFields = function() {
+			var w = root.width();
+			if (w > 0) {
+				if (w < 640) {
+					root.find(".discover-form").width(300);
+					root.find(".fields .sep").hide();
+				} else if (w < 1180) {
+					root.find(".discover-form").width(640);
+					root.find(".fields .sep").hide();				
+				} else {
+					root.find(".discover-form").width(1180);
+					root.find(".fields .sep").show();
+				}
+			}
+		}
+		resizeFields();
+		$( window ).resize(resizeFields);
+
+
+		root.find("#searchbutton").on("click", function(e) {
+			e.preventDefault();
+
+			var typ = typedd.select2("val");
+			var cat = catdd.select2("val");
+			var region = regiondd.select2("val");
+			var keyword = encodeURIComponent(root.find("#keyword").val().trim());
+
+			switch (typ) {				
+				case 'stories':
+					if (keyword.length > 0) {
+						window.location = "/stories/search/?category=" + cat + "&keyword=" + keyword;
+					} else if (cat.length > 0) {
+						var slug = root.find("#cat option:selected").data("slug");
+						window.location = "/stories/category/" + slug + "/" + cat;
+					} else {
+						window.location = "/stories/";
+					}
+					break;
+				case 'listings':
+					var filter = {};
+					if (cat.length > 0) filter["categories.catid"] = cat;
+					if (region.length > 0) filter["regionid"] = region;
+					if (keyword.length > 0) filter["$text"] = {"$search": keyword};
+					window.location = "/all-listings/?" + qs.stringify({filter: filter});
+					break;
+				case 'events':
+					window.location = "/event-calendar/?categories=" + cat + "&keyword=" + keyword;
+					break;
+				case 'offers':
+					var filter = {};
+					if (cat.length > 0) filter["couponCategories"] = cat;
+					if (keyword.length > 0) filter["keyword"] = keyword;
+					window.location = "/packages-deals/?filter=" + JSON.stringify(filter);
+					break;
+				default:
+					break;
+			}				
+		});
+
+
+		var metadata = {
+			stories: {init: false, cats: [], regions: []},
+			listings: {init: false, cats: [], regions: []},
+			events: {init: false, cats: [], regions: []},
+			offers: {init: false, cats: [], regions: []}
+		}
+		
+		var getData = function(typ) {
+			switch (typ) {				
+				case 'stories':
+					getBlogMeta(typ, 'story_blog');
+					break;
+				case 'listings':
+					getListingMeta();
+					break;
+				case 'events':
+					getEventMeta();
+					break;
+				case 'offers':
+					getOfferMeta();
+					break;
+				default:
+					populate("reset");
+					break;
+			}
+		}
+
+		var populate = function(typ) {
+			var cats = [];
+			var regions = [];
+			if (metadata[typ] !== undefined) {
+				var cats = metadata[typ].cats;
+				var regions = metadata[typ].regions;
+			}
+			catdd.html("");
+			catdd.append($("<option />").val("").text("All Categories"));
+			$.each(cats, function(i,val) {
+				catdd.append($("<option />").val(val.id).text(val.text).attr("data-slug", val.slug));
+			});
+			catdd.prop("disabled", (cats.length == 0));
+			catdd.select2("destroy");
+			initCatDD();
+
+			regiondd.html("");
+			regiondd.append($("<option />").val("").text("All Regions"));
+			$.each(regions, function(i,val) {
+				regiondd.append($("<option />").val(val.id).text(val.text).attr("data-slug", val.slug));
+			});
+			regiondd.prop("disabled", (regions.length == 0));
+			regiondd.select2("destroy");
+			initRegionDD();
+		}
+
+		var getBlogMeta = function(typ, blog) {
+			if (metadata[typ].init) return populate(typ);
+			var cats = [];
+			$.get("/includes/rest/plugins_blog_" + blog + "_categories/find/?token=" + core.simpleToken).done(function(res) {
+				if (res.docs !== undefined && res.docs.length > 0) {
+					cats = $.map(res.docs, function(val,i) { return {id: val._id, text: val.title, slug: val.slug} });
+					cats = arrayLib.sortBy(cats, "text", "alpha", "asc");
+				}
+				metadata[typ].cats = cats;
+				metadata[typ].init = true;
+				populate(typ);
+			});
+		}
+
+		var getListingMeta = function() {
+			if (metadata.listings.init) return populate("listings");
+			var cats = [];
+			var regions = [];
+			$.get("/includes/rest/plugins_listings_listingmeta/find/?token=" + core.simpleToken).done(function(res) {
+				if (res.docs !== undefined && res.docs.length == 1) {
+					if (res.docs[0].listingcats !== undefined && res.docs[0].listingcats.length > 0) {
+						cats = $.map(res.docs[0].listingcats, function(val,i) { if (val.active && val.typeid == 2) return {id: val.catid, text: val.catname} });
+						cats = arrayLib.sortBy(cats, "text", "natural", "asc");
+					}
+					if (res.docs[0].regions !== undefined && res.docs[0].regions.length > 0) {
+						regions = $.map(res.docs[0].regions, function(val,i) { if (val.active) return {id: val.regionid, text: val.region} });
+						regions = arrayLib.sortBy(regions, "text", "natural", "asc");
+					}
+				}
+				metadata.listings.cats = cats;
+				metadata.listings.regions = regions;
+				metadata.listings.init = true;
+				populate("listings");
+			});
+		}
+
+		var getEventMeta = function() {
+			if (metadata.events.init) return populate("events");
+			var cats = [];
+			$.get("/includes/rest/plugins_events_events_metadata/find/?token=" + core.simpleToken).done(function(res) {
+				if (res.docs !== undefined && res.docs.length == 1) {
+					if (res.docs[0].categories !== undefined && res.docs[0].categories.length > 0) {
+						cats = $.map(res.docs[0].categories, function(val,i) { if (val.active) return {id: val.value, text: val.label} });
+						cats = arrayLib.sortBy(cats, "text", "natural", "asc");
+					}
+				}
+				metadata.events.cats = cats;
+				metadata.events.init = true;
+				populate("events");
+			});
+		}
+
+		var getOfferMeta = function() {
+			if (metadata.offers.init) return populate("offers");
+			var cats = [];
+			$.get("/includes/rest/plugins_offers_offermeta/find/?token=" + core.simpleToken).done(function(res) {
+				if (res.docs !== undefined && res.docs.length == 1) {
+					if (res.docs[0].categories !== undefined && res.docs[0].categories.length > 0) {
+						cats = $.map(res.docs[0].categories, function(val,i) { if (val.active) return {id: val.categoryid, text: val.categoryname} });
+						cats = arrayLib.sortBy(cats, "text", "natural", "asc");
+					}
+				}
+				metadata.offers.cats = cats;
+				metadata.offers.init = true;
+				populate("offers");
+			});
+		}
+
+		typedd.on('change', function(e) { getData(e.val); });
+		if (typedd.select2("val").length > 0) getData(typedd.select2("val"));
+	});
+</script>

@@ -1,0 +1,66 @@
+<!--SVMETA
+{
+	"requireBundles" : ["plugins_common_custom_custom_widgets", "plugins_common_custom_themes"]
+}
+-->
+{{:~equal(data.data.layout === "sidebar" || data.data.layout === undefined, true)}}
+<div class="vguide red" data-sv-vgiude>
+	<div class="show-for-medium-up">
+		<div class="title theme-color">Learn about Asheville,<br/>inside and out.</div>		
+		<p>Sign up for your free Travel Guide. Your Asheville story begins here.</p>
+		<a href="/travel-guide/"><img src="/includes/public/assets/images/vguide-sidebar.png" /></a>
+	</div>
+	<div class="hide-for-medium-up">
+		<div class="row">
+			<div class="small-6 columns text-right">
+				<div class="title theme-color">Free Travel Guide</div>
+			</div>
+			<div class="small-6 columns">
+				<button class="theme-small" onclick="window.location='/travel-guide/';" data-seo-vguide-sidebar>Request</button>
+			</div>
+		</div>
+	</div>
+</div>
+{{/}}
+
+{{:~equal(data.data.layout, "footer")}}
+<div class="footer-guide green" data-sv-vgiude>	
+	<button class="theme-large" onclick="window.location='/travel-guide/';" data-seo-vguide-footer>Free Travel Guide</button>
+</div>
+{{/}}
+
+{{:~equal(data.data.layout, "homepage")}}
+<div class="vguide homepage red" data-sv-vgiude>
+	<div class="show-for-large-up">
+		<div class="vguide-cont clearfix">
+			<div class="vguide-row">
+				<div class="vguide-left">
+					<div class="title theme-color">Learn about Asheville, inside and out.</div>
+					<p>Sign up for your free Travel Guide. Your Asheville story begins here.</p>
+				</div>
+				<div class="vguide-right">
+					<a href="/travel-guide/" data-seo-vguide-homepage><img src="/includes/public/assets/images/vguide-sidebar.png" /></a>
+				</div>
+			</div>			
+		</div>
+	</div>
+	<div class="hide-for-large-up">
+		<div class="row">
+			<div class="columns">
+				<div class="title theme-color">Free Travel Guide</div>
+				<button class="theme-small" onclick="window.location='/travel-guide/';" data-seo-vguide-homepage><img src="/includes/public/assets/images/vguide-sidebar.png">Request</button>
+			</div>
+		</div>
+	</div>
+</div>
+{{/}}
+
+<script>
+	require(["jquery", "plugins_common_custom_seotracker", "domReady!"], function($, seotracker) {
+		var root = $("div[data-sv-vgiude]");
+
+		root.find("[data-seo-vguide-sidebar]").attr("onMouseDown", seotracker.addEvent({category: 'Sidebar', action: 'Travel Guide Widget', jslabel: 'window.location.pathname', wrap: false }));
+		root.find("[data-seo-vguide-footer]").attr("onMouseDown", seotracker.addEvent({category: 'Footer', action: 'Travel Guide Widget', jslabel: 'window.location.pathname', wrap: false }));
+		root.find("[data-seo-vguide-homepage]").attr("onMouseDown", seotracker.addEvent({category: 'Homepage', action: 'Travel Guide Widget', jslabel: 'window.location.pathname', wrap: false }));
+	});
+</script>
