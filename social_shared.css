@@ -1,0 +1,44 @@
+.socialContent { }
+.socialContent .clear { clear:both; }
+
+.socialFeed .items { position:relative; }
+.socialFeed .items .item { float: left; margin:10px 0 0 0; padding:0 10px 10px 0; width: 220px; }
+
+/** FACEBOOK **/
+.socialFeed.facebook_content { overflow:visible; position:relative; }
+
+/** TWITTER **/
+.socialFeed.twitter_content { overflow:hidden; }
+
+/** INSTAGRAM **/
+
+/** YOUTUBE **/
+.socialFeed.youtube_content .items .item { min-height:230px; }
+.socialFeed.youtube_content .title { line-height: 1.3; margin: 10px 0 0; padding: 5px 0 0 5px; }
+.socialFeed.youtube_content .youtube-link { position: relative; }
+.socialFeed.youtube_content .youtube-link img { display: block; margin: 0 auto; }
+.socialFeed.youtube_content .youtube-link .play {
+	background: url(/includes/public/assets/images/youtube.png) no-repeat scroll 0 0 transparent;
+    height: 56px;
+    left: 70px;
+    position: absolute;
+    top: -104px;
+    width: 80px;
+}
+.socialFeed.youtube_content .youtube-link:hover .play {
+	background: url(/includes/public/assets/images/youtubehover.png) no-repeat scroll 0 0 transparent;
+}
+
+/** FLICKR **/
+
+/** PINTEREST **/
+.socialFeed.pinterest_content {}
+.socialFeed.pinterest_content .follow { display: block; height: 28px; margin: 10px auto; width: 169px; }
+.socialFeed.pinterest_content .item {
+	background-color:#ffffff; 
+	-moz-box-shadow: 1px 1px 2px 2px rgba(0,0,0,0.25);
+	-webkit-box-shadow: 1px 1px 2px 2px rgba(0,0,0,0.25);
+	box-shadow: 1px 1px 2px 2px rgba(0,0,0,0.25);
+	min-height: 10px;
+	padding:14px;
+}
