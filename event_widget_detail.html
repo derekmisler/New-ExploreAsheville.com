@@ -202,13 +202,6 @@
 				removeButtonTemplate: "<a href='"+ tripbuilder.path +"' data-tb-view class='tripView theme-color'>View Trip</a>"
 			});
 			
-			//Place on Add to Trip Planner button on events
-			$('body').on('click', 'a.tripAdd', function() {
-				setTimeout(function() {
-					versaTagObj.generateRequest('http://www.exploreasheville.com/itineraryholiday');
-				}, 1000);
-			});
-
 		}
 
 		//add tracking
@@ -222,5 +215,12 @@
 		root.find("[data-seo-twitter]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: "Link to Twitter", label: seolabel }));
 		root.find("[data-seo-tickets]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: "Buy Tickets", label: seolabel }));
 		root.find("[data-seo-nearby]").attr("onclick", seotracker.addEvent({ wrap: false, category: seocat, action: "What\'s Nearby", label: seolabel }));
+	
+	
+			//Place on Add to Trip Planner button on events
+			$('.tripButtonContainer').on('click', function(){ 
+				versaTagObj.generateRequest('http://www.exploreasheville.com/itineraryholiday');
+			});
+	
 	});
 </script>

@@ -1,8 +1,6 @@
 			//Place on Add to Trip Planner button on events
-			$('body').on('click', 'a.tripAdd', function() {
-				setTimeout(function() {
-					versaTagObj.generateRequest('http://www.exploreasheville.com/itineraryholiday');
-				}, 1000);
+			$('.tripButtonContainer').on('click', function(){ 
+				versaTagObj.generateRequest('http://www.exploreasheville.com/itineraryholiday');
 			});
 
 
@@ -17,7 +15,7 @@
 <script type="text/javascript">
 	require(["jquery", "domReady!"], function(validator) {
 		//place on weddings pages
-		$('body').on('click', '.contact a', function() {
+		$('body').on('click', '.contacts a', function() {
 			if(window.location.href.indexOf('weddings') > -1) {
 				setTimeout(function() {
 					versaTagObj.generateRequest('http://www.exploreasheville.com/weddingsemailbutton');
