@@ -1,0 +1,63 @@
+<!--SVMETA
+{
+	"requireBundles" : ["plugins_collections_shared"]
+}
+-->
+
+{{~setVar("sanitize", function(input,max,mtxt) { 
+  if (input === undefined || input === null || typeof input !== 'string') return '';
+  if (input.length == 0) return '';
+  var tempsub = input;
+  var start = input.indexOf('<p>');
+  if (start > 0) { tempsub = input.substr(start, input.length); }
+  tempsub = helpers.plugins.stringLib.stripHtml(tempsub);
+  if(tempsub.length>max){ return helpers.plugins.stringLib.substringOnWord(tempsub,max)+mtxt; }else{ return tempsub; }
+})}}
+
+{{:~equal(data.templateData.layout === "default" || data.templateData.layout === undefined, true)}}
+<div class="custom_content_featured {{templateData.theme}}" data-featured-guid="{{guid}}">
+{{#items}}
+{{:@first}}
+  <div class="row itemrow">
+    <div class="medium-12 large-6 columns itemleft">
+      <div class="img">
+      {{:image}}
+        {{:animated}}
+        <video width="100%" autoplay loop muted="muted">
+          <source src="{{image.resource.getThumbnailUrl({ height : 480, width : 640, crop : 'fill', gravity: 'center', quality: 60, fetch_format: 'mp4' })}}" type="video/mp4"></source>
+          <img src="{{image.resource.getThumbnailUrl({ height : 480, width : 640, crop : 'fill', gravity: 'center', quality: 60, fetch_format: 'png' })}}"/>
+        </video>
+        {{?}}
+        <img src="{{image.resource.getThumbnailUrl({ height : 480, width : 640, crop : 'fill', gravity: 'center', quality: 60 })}}"/>
+        {{/}}
+      {{/image}}
+      {{!image}}
+        <img src="/includes/public/assets/images/default-sq.jpg"/>
+      {{/image}}
+      </div>
+    </div>
+    <div class="medium-12 large-6 columns itemright">
+      <div class="content">
+        <div class="title"><a class="theme-color" href="{{url}}">{{~var.sanitize(data.title, 100, '&hellip;')}}</a></div>
+        <div class="subtitle">{{:author}}by {{author}}{{/author}}</div>
+        <div class="content-arrow theme-small-arrow"></div>
+        <p>{{~var.sanitize(data.description, 550, '')}}{{:url}} &hellip; <a class="theme-color" href="{{url}}">more</a>{{/url}}</p>
+      </div>
+    </div>
+  </div>
+{{/@first}}
+{{/items}}
+</div>
+{{/}}
+
+{{:~equal(data.templateData.layout, "overlay")}}
+<div class="custom_content_featured_overlay" data-featured-guid="{{guid}}">
+{{#items}}
+{{:@first}}
+  <div class="title">{{~var.sanitize(data.title, 50, '&hellip;')}}</div>
+  <div class="subtitle">{{:author}}by {{author}}{{/author}}</div>
+  <p>{{~var.sanitize(data.description, 550, '')}}{{:url}} &hellip; <a href="{{url}}">read more</a>{{/url}}</p>
+{{/@first}}
+{{/items}}
+</div>
+{{/}}
