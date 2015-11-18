@@ -1,0 +1,36 @@
+<!--SVMETA
+{
+	"requireBundles" : ["plugins_mediagallery_shared"]
+}
+-->
+
+<div class="mediaGallery widget_gallery mg">
+	<div class="row collapse gallery">
+		{{:templateData.showtitle}}<h3>{{title}}</h3>{{/templateData.showtitle}}
+		<div class="small-12 columns">
+			{{:templateData.showdescription}}
+			<p>{{description}}</p>
+			{{/templateData.showdescription}}
+			<p class="preview">
+				{{#albums}}
+				<a href="{{url}}" class="th">
+					{{#items}}
+						{{:@first}}
+					<img src="{{asset.resource.getThumbnailUrl({ "height" : 150, "width" : 175, "crop" : "fill" })}}" alt="{{-title}}" /> 
+						{{/@first}}
+					{{/items}}
+					<span class="thoverlay">
+						{{title}}<br />
+						{{:~equal(data.imagecount > 0, true)}}
+							{{imagecount}} Photo{{:~equal(data.imagecount > 1, true)}}s{{/}}
+						{{/}}
+						{{:~equal(data.videocount > 0, true)}}
+							<span class="vidcount">{{videocount}} Video{{:~equal(data.videocount > 1, true)}}s{{/}}</span>
+						{{/}}
+					</span>
+				</a>
+				{{/albums}}
+			</p>
+		</div>
+	</div>
+</div>

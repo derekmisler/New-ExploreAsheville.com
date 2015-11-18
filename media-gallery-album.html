@@ -1,0 +1,203 @@
+<!--SVMETA
+{
+	"requireBundles" : ["plugins_mediagallery_shared", "sv_siteSlick"]
+}
+-->
+
+<div class="mediaGallery widget_album {{cls}}" id="mediaGallery_{{guid}}">
+	<div class="mainImage slider row">
+		<div class="items columns">
+			{{#items}}
+				<div class="item" data-itemid="{{id}}" data-albumphotopath="{{-url}}{{slug}}/">
+					{{:~equal(data.asset.type, "image")}}
+						<img src="{{asset.resource.getThumbnailUrl({ 'height' : 480, 'width' : 640, 'crop' : 'fill' })}}" />
+					{{/}}
+					{{:~equal(data.asset.type, "video")}}
+						{{asset.videoresource.getEmbedCode({ 'height' : 480, 'width' : 640 })}}
+					{{/}}
+					{{:title}}
+						<div class="title">
+							{{title}}
+						</div>
+					{{/title}}
+					{{:description}}
+						<div class="description">
+							{{description}}
+						</div>
+					{{/description}}
+					{{:credit}}
+						<div class="credits">
+							Credit: {{credit}}
+						</div>
+					{{/credit}}
+				</div>
+			{{/items}}
+		</div>
+	</div>
+	<div class="navImage row">
+		<div class="items columns">
+			{{#items}}
+				<div class="item {{:@first}}current{{/@first}}" data-itemid="{{id}}">
+					<img src="{{asset.resource.getThumbnailUrl({ 'height' : 150, 'width' : 200, 'crop' : 'fill' })}}" />
+				</div>
+			{{/items}}
+		</div>
+	</div>
+
+	<div data-mg-detailContent></div>
+
+	<script type="text/template" data-mg-detailTmpl>
+		{{$}}
+			<div class="photobox">
+				<div class="row collapse">
+					<div class="large-6 small-12 columns photoboxcol">
+						<strong>This photo appears in these albums:</strong>
+						<p class="tags">
+						{{#albums}}
+							<a href="{{url}}">{{title}}</a>
+							{{!@last}}
+							<span>&bull;</span>
+							{{/@last}}
+						{{/albums}}
+						</p>
+						{{:tags}}
+						<strong>Tags:</strong>
+						<p class="tags">
+						{{#tags}}
+							<a href="{{-searchPath}}?q=tag:{{title}}&type=mediagallery">{{title}}</a>
+							{{!@last}}
+							<span>&bull;</span>
+							{{/@last}}
+						{{/tags}}
+						</p>
+						{{/tags}}
+						{{:lat}}
+							<p>
+								<strong>Location of where this photo was taken:</strong><br />
+								<img src="http://maps.googleapis.com/maps/api/staticmap?center={{lat}},{{lng}}&zoom=12&size=230x220&markers=icon:/includes/public/managed/core/plugins/core/virtuals/images/custom_map_point.png%7C{{lat}},{{lng}}&sensor=false" />
+							</p>
+						{{/lat}}
+						{{#asset.asset_request}}
+							<p><a href="{{url}}">Request to Download</a></p>
+						{{/asset.asset_request}}
+					</div>
+					<div class="large-6 small-12 columns photoboxcol">
+						{{:showaddthis}}
+						<strong>Share This Item</strong>
+						<div class="addthis_toolbox addthis_default_style addthis_32x32_style share-options" id="mg-addthis" addthis:url="{{fullurl}}">
+							<a class="addthis_button_email"></a>
+							<a class="addthis_button_pinterest_share"></a>
+							<a class="addthis_button_twitter"></a>
+							<a class="addthis_button_facebook"></a>
+							<a class="addthis_button_google_plusone_share"></a>
+						</div>
+						{{/showaddthis}}
+						{{:events}}
+						<strong>Related Events:</strong>
+						<p>
+							{{#events}}
+							<a href="{{url}}">{{title}}</a><br/>
+							{{/events}}
+						</p>
+						{{/events}}
+						{{:listings}}
+						<strong>Related Listings:</strong>
+						<p>
+							{{#listings}}
+							<a href="{{detailURL}}">{{title}}</a><br/>
+							{{/listings}}
+						</p>
+						{{/listings}}
+						<fb:comments id="mg-Comments" href="{{fullurl}}" num_posts="2" width="280"></fb:comments>
+					</div>
+				</div>
+			</div>
+		{{/}}
+	</script>
+</div>
+
+<script type="text/javascript">
+	require(["https://connect.facebook.net/en_US/all.js"], function() {
+		FB.init({appId:"379168125458402", status:true, cookie:true, oauth:true, xfbml:true });
+	});
+
+	require(["jquery", "sv_goatee!", "sv_siteSlick", {{:showaddthis}}"plugins_addthis",{{/showaddthis}} "domReady!"], function($, goatee) {
+		var root = $("#mediaGallery_{{guid}}");
+		var itemTmpl = root.find("[data-mg-detailTmpl]").html();
+		var mainSlider = root.find(".mainImage .items");
+		var navSlider = root.find(".navImage .items");
+		
+		var getDetail = function(cb) {
+			cb = cb || function() {}
+			
+			var activeId = root.find(".mainImage .slick-active").data("itemid");
+			
+			$.get("/includes/plugins/mediagallery/getitemdetails/", { id : activeId }, function(data) {
+				data.searchPath = "{{searchPath}}";
+				data.fullurl = window.location.protocol + "//" + window.location.host + data.url;
+				var html = goatee.fill(itemTmpl, data);
+				root.find("[data-mg-detailContent]").html(html);
+				{{:showaddthis}}
+					addthis.toolbox('.share-options');
+				{{/showaddthis}}
+				FB.XFBML.parse();
+				cb(null);
+			});
+		}
+		
+		mainSlider.slick({
+			slidesToShow : 1,
+			slidesToScroll : 1,
+			prevArrow : '<i class="arrow leftArrow fa fa-chevron-left"></i>',
+			nextArrow : '<i class="arrow rightArrow fa fa-chevron-right"></i>',
+			asNavFor : "#mediaGallery_{{guid}} .navImage .items"
+		});
+
+		navSlider.slick({
+			focusOnSelect : true,
+			asNavFor : "#mediaGallery_{{guid}} .mainImage .items",
+			slidesToShow : 5,
+			slidesToScroll : 1,
+			arrows : false,
+			swipe : false,
+			slidesToShow: 6,
+			slidesToScroll: 1,
+			responsive: [
+				{
+					breakpoint: 1200,
+					settings: {
+						slidesToShow: 5,
+						slidesToScroll: 1,
+					}
+				},
+				{
+					breakpoint: 1024,
+					settings: {
+						slidesToShow: 4,
+						slidesToScroll: 1,
+					}
+				},
+				{
+					breakpoint: 800,
+					settings: {
+						slidesToShow: 3,
+						slidesToScroll: 1
+					}
+				}
+			]
+		});
+		
+		root.css({ opacity : 1 });
+		
+		mainSlider.on("afterChange", function(event, slick, index) {
+			// after the slider has finished, we need to highlight the current item
+			// bind to the main slider due to the navSlider not issuing the afterChange event if there are less than slidesToShow items in the slider
+			navSlider.find(".item").removeClass("current");
+			navSlider.find(".item[data-slick-index=" + index + "]").addClass("current");
+			
+			getDetail();
+		});
+		
+		getDetail();
+	});
+</script>
