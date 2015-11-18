@@ -108,7 +108,6 @@
 							{{/listings}}
 						</p>
 						{{/listings}}
-						<fb:comments id="mg-Comments" href="{{fullurl}}" num_posts="2" width="280"></fb:comments>
 					</div>
 				</div>
 			</div>
@@ -117,9 +116,6 @@
 </div>
 
 <script type="text/javascript">
-	require(["https://connect.facebook.net/en_US/all.js"], function() {
-		FB.init({appId:"379168125458402", status:true, cookie:true, oauth:true, xfbml:true });
-	});
 
 	require(["jquery", "sv_goatee!", "sv_siteSlick", {{:showaddthis}}"plugins_addthis",{{/showaddthis}} "domReady!"], function($, goatee) {
 		var root = $("#mediaGallery_{{guid}}");
@@ -140,7 +136,6 @@
 				{{:showaddthis}}
 					addthis.toolbox('.share-options');
 				{{/showaddthis}}
-				FB.XFBML.parse();
 				cb(null);
 			});
 		}
