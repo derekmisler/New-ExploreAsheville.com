@@ -54,7 +54,7 @@
 				<div class="title"><a {{urltracking}} class="theme-color" href="{{url}}">{{name}}</a></div>
 				<div class="row">							
 					<div class="small-6 columns">
-						<img src="{{image.resource.getThumbnailUrl({ "height": 320, "width": 320, "crop" : "fill", "quality" : 60 })}}"/>
+						<img src="{{image.resource.getThumbnailUrl({ "height": 320, "width": 320, "crop" : "fill", "quality" : 60 })}}" nopin = "nopin" />
 					</div>
 					<div class="small-6 columns">
 						{{description}}
@@ -151,7 +151,7 @@
 					<div class="title"><br>Author:<br><a {{urltracking}} class="theme-color" href="{{url}}">{{name}}</a></div>
 					<div class="row">							
 						<div class="small-6 columns">
-							<img src="{{image.resource.getThumbnailUrl({ "height": 320, "width": 320, "crop" : "fill", "quality" : 60 })}}"/>
+							<img src="{{image.resource.getThumbnailUrl({ "height": 320, "width": 320, "crop" : "fill", "quality" : 60 })}}" nopin = "nopin" />
 						</div>
 						<div class="small-6 columns">
 							{{~var.sanitize(data.description, 140, '')}}{{:description}}{{:url}} &hellip; <a class="theme-color" href="{{url}}">more</a>{{/url}}{{/description}}
@@ -223,7 +223,7 @@
 					{{#items}}
 					<div class="slide">
 						<div class="pad">
-							<a class="theme-color" href="{{url}}"><img data-src="{{image.resource.getThumbnailUrl({ height : 640, width : 640, crop : 'fill', gravity: 'center', quality: 50 })}}"/></a>
+							<a class="theme-color" href="{{url}}"><img nopin = "nopin" data-src="{{image.resource.getThumbnailUrl({ height : 640, width : 640, crop : 'fill', gravity: 'center', quality: 50 })}}"/></a>
 							<div class="title"><a class="theme-color" href="{{url}}">{{title}}</a></div>	
 						</div>
 					</div>
