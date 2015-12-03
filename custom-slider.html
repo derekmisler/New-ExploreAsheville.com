@@ -1,0 +1,71 @@
+<!--SVMETA
+{
+	"requireBundles" : ["widget_plugins_collections_template_custom_slider", "sv_siteSlick"]
+}
+-->
+
+{{~setVar("sanitize", function(input,max,mtxt) { 
+	if (input === undefined || input === null || typeof input !== 'string') return '';
+	if (input.length == 0) return '';
+	var tempsub = input;
+	var start = input.indexOf('<p>');
+	if (start > 0) { tempsub = input.substr(start, input.length); }
+	tempsub = helpers.plugins.stringLib.stripHtml(tempsub);
+	if(tempsub.length>max){ return helpers.plugins.stringLib.substringOnWord(tempsub,max)+mtxt; }else{ return tempsub; }
+})}}
+
+<div class="custom_slider {{templateData.theme}}" data-guid="{{guid}}">
+	<div class="title">{{templateData.title}}</div>
+	<div class="slides">
+		{{#items}}
+			{{:image}}
+				<div class="slide">
+					<div class="pad">
+						<img src="{{image.resource.getThumbnailUrl({ height : 320, width : 320, crop : 'fill', gravity: 'center', quality: 60 })}}"/>
+						<div class="content">
+							<div class="title"><a class="theme-color" href="{{url}}">{{~var.sanitize(data.title, 60, '&hellip;')}}</a></div>
+							<p>{{~var.sanitize(data.description, 120, '&hellip;')}}</p>
+						</div>
+					</div>
+				</div>
+			{{/image}}
+		{{/items}}
+	</div>
+</div>
+
+<script>
+	require(["jquery", "sv_siteSlick", "domReady!"], function() {
+		var root = $("[data-guid={{guid}}]");
+		
+		var slider = root.find(".slides");
+		
+		slider.on("init", function() {
+			root.css({ visibility : "visible" });
+		});
+
+		slider.slick({
+			slide : ".slide",
+			draggable : false,
+			dots: false,
+			infinite: false,
+			slidesToShow: 4,
+			slidesToScroll: 4,
+			responsive: [
+				{
+					breakpoint: 1024,
+					settings: {
+						slidesToShow: 2,
+						slidesToScroll: 2,
+					}
+				},
+				{
+					breakpoint: 700,
+					settings: {
+						slidesToShow: 1,
+						slidesToScroll: 1
+					}
+				}
+			]
+		});		
+	});
+</script>
