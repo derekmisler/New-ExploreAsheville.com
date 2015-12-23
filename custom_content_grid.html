@@ -1,0 +1,52 @@
+<!--SVMETA
+{
+  "requireBundles" : ["plugins_collections_shared", "plugins_common_custom_themes"]
+}
+-->
+
+{{~setVar("sanitize", function(input,max,mtxt) { 
+  if (input === undefined || input === null || typeof input !== 'string') return '';
+  if (input.length == 0) return '';
+  var tempsub = input;
+  var start = input.indexOf('<p>');
+  if (start > 0) { tempsub = input.substr(start, input.length); }
+  tempsub = helpers.plugins.stringLib.stripHtml(tempsub);
+  if(tempsub.length>max){ return helpers.plugins.stringLib.substringOnWord(tempsub,max)+mtxt; }else{ return tempsub; }
+})}}
+
+<div class="custom_content_grid {{templateData.theme}}" data-grid-guid="{{guid}}">
+  <ul class="medium-block-grid-2">
+  {{#items}}
+  <li>
+    <div class="item">
+      {{:image}}
+        {{:animated}}
+      <a href="{{url}}" title="{{%title}}"><video width="100%" autoplay loop muted="muted">
+        <source src="{{image.resource.getThumbnailUrl({ height : 290, width : 640, crop : 'fill', gravity: 'center', quality: 50, fetch_format: 'mp4' })}}" type="video/mp4"></source>
+        <img src="{{image.resource.getThumbnailUrl({ height : 290, width : 640, crop : 'fill', gravity: 'center', quality: 50, fetch_format: 'png' })}}"/>
+      </video></a>
+        {{?}}
+      <a href="{{url}}" title="{{%title}}"><img src="{{image.resource.getThumbnailUrl({ height : 290, width : 640, crop : 'fill', gravity: 'center', quality: 50 })}}"/></a>
+        {{/}}
+      {{/image}}
+      {{!image}}
+      <a href="{{url}}"><img src="/includes/public/assets/images/default.jpg"/></a>
+      {{/image}}
+      <div class="content">
+        <div class="title"><a class="theme-color" href="{{url}}">{{~var.sanitize(data.title, 100, '&hellip;')}}</a></div>
+        <div class="subtitle">{{:author}}by {{author}}{{/author}}</div>
+        <div class="content-arrow theme-small-arrow"></div>
+        {{:data.description}}
+          <p class="show-for-medium-up">{{~var.sanitize(data.description, 250, '')}}{{:url}} &hellip; <a class="theme-color" href="{{url}}">read more</a>{{/url}}</p>
+        {{/data.description}}
+      </div>
+    </div>
+  </li>
+{{/items}}
+  </ul>
+{{:templateData.url}}
+  <div class="text-center">
+    <button class="viewall theme-large" type="button" onclick="window.location='{{templateData.url}}';">{{:templateData.viewall}}{{templateData.viewall}}{{/templateData.viewall}}{{!templateData.viewall}}View More{{/templateData.viewall}}</button>
+  </div>
+{{/templateData.url}}
+</div>
