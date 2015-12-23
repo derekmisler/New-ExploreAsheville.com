@@ -36,17 +36,17 @@
         <div class="title"><a class="theme-color" href="{{url}}">{{~var.sanitize(data.title, 100, '&hellip;')}}</a></div>
         <div class="subtitle">{{:author}}by {{author}}{{/author}}</div>
         <div class="content-arrow theme-small-arrow"></div>
-        {{:data.description}}
+        {{:description}}
           <p class="show-for-medium-up">{{~var.sanitize(data.description, 250, '')}}{{:url}} &hellip; <a class="theme-color" href="{{url}}">read more</a>{{/url}}</p>
-        {{/data.description}}
+        {{/description}}
       </div>
     </div>
   </li>
-{{/items}}
+  {{/items}}
   </ul>
-{{:templateData.url}}
+  {{:templateData.url}}
   <div class="text-center">
     <button class="viewall theme-large" type="button" onclick="window.location='{{templateData.url}}';">{{:templateData.viewall}}{{templateData.viewall}}{{/templateData.viewall}}{{!templateData.viewall}}View More{{/templateData.viewall}}</button>
   </div>
-{{/templateData.url}}
+  {{/templateData.url}}
 </div>
